@@ -5,8 +5,7 @@
       "launchBrowser": true,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "VaultUri": "https://sandeepkv.vault.azure.net/",
-        "AZURE_USERNAME": "sandnair@microsoft.com"
+        "VaultUri": "https://{VaultName}.vault.azure.net/"
       },
       "applicationUrl": "https://localhost:63709;http://localhost:63710"
     },
@@ -17,8 +16,7 @@
       "publishAllPorts": true,
       "useSSL": true,
       "environmentVariables": {
-        "VaultUri": "https://sandeepkv.vault.azure.net/",
-        "AZURE_USERNAME": "sandnair@microsoft.com"
+        "VaultUri": "https://{VaultName}.vault.azure.net/"
       }
     }
   }
