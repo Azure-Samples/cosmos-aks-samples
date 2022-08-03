@@ -1,6 +1,6 @@
 # Project Name
 
-(short, 1-3 sentenced, description of the project)
+A secure Web reference application using AKS with Managed Identity, Key Vault, and Cosmos DB that is designed to be deploy with Bicep and ASO Integration
 
 ## Features
 
