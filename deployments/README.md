@@ -19,6 +19,7 @@ The bicep modules will provision the following Azure Resources under subscriptio
 ### Resource Provisioning
 
 1. Clone the repo
+
 Clone the repo and move to deployments folder
 
 ```bash
@@ -36,7 +37,9 @@ az account set -s <Subscription ID>
 
 3. Initilaize Parmaters
 
-Refer to [this] (https://docs.microsoft.com/en-us/azure/azure-resource-manager/management/resource-name-rules). Create a param.json file by using the following JSON, using your own values for Resource Group Name, Cosmos DB Account Name, and ACR instance Name
+Refer to [the naming rules and restrictions for Azure resources](https://docs.microsoft.com/en-us/azure/azure-resource-manager/management/resource-name-rules).
+
+Using the following JSON as template create your own param.json, update your own values for Resource Group Name, Cosmos DB Account Name, and ACR instance Name
 
 ```json
 {
@@ -79,7 +82,7 @@ az aks update -n $baseline'aks' -g $baseline'-RG' --attach-acr $acrName
 Use [az aks get-credentials][az-aks-get-credentials] to sign in to your AKS cluster. This command also downloads and configures the kubectl client certificate on your development computer.
 ```bash
 # az aks get-credentials -n $baseline'aks' -g $baseline'-RG'
-`
+```
 
 7. Enable the AKS Pods to connect to Key Vault
 Using the following YAML template create a secretproviderclass.yml, update your own values for Tenant Id, and Kev Vault Name
@@ -106,12 +109,12 @@ spec:
           objectType: key
           objectVersion: ""
     tenantId: "{Tenant Id}"              # The tenant ID of the key vault
-`
+```
 
 8. Apply the SecretProviderClass to your cluster
 ```bash
 kubectl apply -f secretproviderclass.yaml
-`
+```
 
 9. Push the container image to ACR
 Build the application source code, [publish the container image to the ACR] (https://docs.microsoft.com/en-us/visualstudio/containers/hosting-web-apps-in-docker?view=vs-2022).
