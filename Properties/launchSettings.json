@@ -1,0 +1,23 @@
+{
+  "profiles": {
+    "todo": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "VaultUri": "https://{VaultName}.vault.azure.net/"
+      },
+      "applicationUrl": "https://localhost:63709;http://localhost:63710"
+    },
+    "Docker": {
+      "commandName": "Docker",
+      "launchBrowser": true,
+      "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}",
+      "publishAllPorts": true,
+      "useSSL": true,
+      "environmentVariables": {
+        "VaultUri": "https://{VaultName}.vault.azure.net/"
+      }
+    }
+  }
+}
