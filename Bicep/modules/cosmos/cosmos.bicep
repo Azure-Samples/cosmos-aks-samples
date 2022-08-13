@@ -2,7 +2,7 @@
 param location string = resourceGroup().location
 
 @description('Cosmos DB account name, max length 44 characters')
-param accountName string = toLower('rgName-${uniqueString(resourceGroup().id)}-cosmossql')
+param accountName string// = toLower('rgName-${uniqueString(resourceGroup().id)}-cosmossql')
 
 @description('Friendly name for the SQL Role Definition')
 param roleDefinitionName string = 'My Read Write Role- No Delete'
@@ -30,7 +30,7 @@ var locations = [
 var roleDefinitionId = guid('sql-role-definition-', principalId, databaseAccount.id)
 var roleAssignmentId = guid(roleDefinitionId, principalId, databaseAccount.id)
 
-resource databaseAccount 'Microsoft.DocumentDB/databaseAccounts@2021-04-15' = {
+resource databaseAccount 'Microsoft.DocumentDB/databaseAccounts@2022-05-15' = {
   name: accountName
   kind: 'GlobalDocumentDB'
   location: location
@@ -46,7 +46,7 @@ resource databaseAccount 'Microsoft.DocumentDB/databaseAccounts@2021-04-15' = {
 }
 output cosmosEndpoint string = databaseAccount.name
 
-resource sqlRoleDefinition 'Microsoft.DocumentDB/databaseAccounts/sqlRoleDefinitions@2021-04-15' = {
+resource sqlRoleDefinition 'Microsoft.DocumentDB/databaseAccounts/sqlRoleDefinitions@2022-05-15' = {
   name: '${databaseAccount.name}/${roleDefinitionId}'
   properties: {
     roleName: roleDefinitionName
@@ -62,7 +62,7 @@ resource sqlRoleDefinition 'Microsoft.DocumentDB/databaseAccounts/sqlRoleDefinit
   }
 }
 
-resource sqlRoleAssignment 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments@2021-04-15' = {
+resource sqlRoleAssignment 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments@2022-05-15' = {
   name: '${databaseAccount.name}/${roleAssignmentId}'
   properties: {
     roleDefinitionId: sqlRoleDefinition.id
@@ -96,57 +96,4 @@ resource container 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/container
   }
 }
 
-/*
-      /*indexingPolicy: {
-        indexingMode: 'consistent'
-        includedPaths: [
-          {
-            path: '/*'
-          }
-        ]
-        excludedPaths: [
-          {
-            path: '/myPathToNotIndex/*'
-          }
-        ]
-        compositeIndexes: [
-          [
-            {
-              path: '/name'
-              order: 'ascending'
-            }
-            {
-              path: '/age'
-              order: 'descending'
-            }
-          ]
-        ]
-        spatialIndexes: [
-          {
-            path: '/location/*'
-            types: [
-              'Point'
-              'Polygon'
-              'MultiPolygon'
-              'LineString'
-            ]
-          }
-        ]
-      }
-      defaultTtl: 86400
-      uniqueKeyPolicy: {
-        uniqueKeys: [
-          {
-            paths: [
-              '/phoneNumber'
-            ]
-          }
-        ]
-      }
-    }
-    options: {
-      throughput: throughput
-    }
-  }
-}
-*/
+

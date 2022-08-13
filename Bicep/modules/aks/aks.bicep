@@ -1,24 +1,23 @@
 param basename string
-param logworkspaceid string
 param subnetId string
 param identity object
 param identityid string
 param clientId string
 param principalId string
-//param publicKey string
 param location string = resourceGroup().location
 param podBindingSelector string
 param podIdentityName string
 param podIdentityNamespace string
 
+//param logworkspaceid string  // Uncomment this to configure log analytics workspace
 
-resource aksCluster 'Microsoft.ContainerService/managedClusters@2021-03-01' = {
+
+resource aksCluster 'Microsoft.ContainerService/managedClusters@2022-06-02-preview' = {
   name: '${basename}aks'
   location: location
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: identity   
-    //type: 'SystemAssigned' 
   }
   properties: {
     kubernetesVersion: '1.22.11'
@@ -41,17 +40,7 @@ resource aksCluster 'Microsoft.ContainerService/managedClusters@2021-03-01' = {
         enableNodePublicIP:false
       }
     ]
-   /*
-    linuxProfile: {
-      ssh: {
-        publicKeys: [
-          {
-             keyData: publicKey
-          }
-        ]
-      }
-      adminUsername: 'azureuser'          
-    }*/
+
     networkProfile: {
       loadBalancerSku: 'standard'
       networkPlugin: 'azure'
@@ -59,7 +48,6 @@ resource aksCluster 'Microsoft.ContainerService/managedClusters@2021-03-01' = {
       dockerBridgeCidr: '172.17.0.1/16'
       dnsServiceIP: '10.0.0.10'
       serviceCidr: '10.0.0.0/16'
-      //networkPolicy: 'azure'
  
     }
     apiServerAccessProfile: {
@@ -67,18 +55,15 @@ resource aksCluster 'Microsoft.ContainerService/managedClusters@2021-03-01' = {
     }
     enableRBAC: true
     enablePodSecurityPolicy: false
-    /*aadProfile: {
-      enableAzureRBAC: true
-      managed: true
-      tenantID: subscription().tenantId
-    }*/
     addonProfiles:{
-      omsagent: {
+      /*
+	  // Uncomment this to configure log analytics workspace
+	  omsagent: {
         config: {
           logAnalyticsWorkspaceResourceID: logworkspaceid
         }
         enabled: true
-      }
+      }*/
       azureKeyvaultSecretsProvider: {
         enabled: true
       }

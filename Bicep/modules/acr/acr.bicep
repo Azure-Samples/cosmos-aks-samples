@@ -2,7 +2,7 @@ param acrName string
 param location string = resourceGroup().location
 param principalId string
 
-resource acr 'Microsoft.ContainerRegistry/registries@2020-11-01-preview' = {
+resource acr 'Microsoft.ContainerRegistry/registries@2022-02-01-preview' = {
   name: acrName
   location: location
   sku: {

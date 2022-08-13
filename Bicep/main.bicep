@@ -5,15 +5,8 @@ param baseName string
 param acrName string
 param cosmosName string
 
-//param pubkeydata string
+var rgName = '${baseName}-rg'
 
-
-var rgName = '${baseName}-RG'
-
-/*
-// Must be unique name
-var acrName = '${uniqueString(rgName)}acr'
-*/
 
 var location =deployment().location
 
@@ -27,7 +20,7 @@ module rg 'modules/resource-group/rg.bicep' = {
 
 module aksIdentity 'modules/Identity/userassigned.bicep' = {
   scope: resourceGroup(rg.name)
-  name: 'aksIdentity'
+  name: 'managedIdentity'
   params: {
     basename: baseName
     location: location
@@ -43,7 +36,7 @@ resource vnetAKSRes 'Microsoft.Network/virtualNetworks@2021-02-01' existing = {
 
 module vnetAKS 'modules/vnet/vnet.bicep' = {
   scope: resourceGroup(rg.name)
-  name: 'AKS-VNet'
+  name: 'aksVNet'
   params: {
     vnetNamePrefix: 'aks'
     location: location
@@ -55,7 +48,7 @@ module vnetAKS 'modules/vnet/vnet.bicep' = {
 
 module acrDeploy 'modules/acr/acr.bicep' = {
   scope: resourceGroup(rg.name)
-  name: 'acrDeploy'
+  name: 'acrInstance'
   params: {
     acrName: acrName
     principalId: aksIdentity.outputs.principalId
@@ -63,6 +56,8 @@ module acrDeploy 'modules/acr/acr.bicep' = {
   }
 }
 
+/*
+// Uncomment this to configure log analytics workspace
 
 module akslaworkspace 'modules/laworkspace/la.bicep' = {
   scope: resourceGroup(rg.name)
@@ -72,27 +67,14 @@ module akslaworkspace 'modules/laworkspace/la.bicep' = {
     location: location
   }
 }
-
+*/
 
 resource subnetaks 'Microsoft.Network/virtualNetworks/subnets@2020-11-01' existing = {
-  name: 'AKS'
+  name: 'aksSubNet'
   parent: vnetAKSRes
 }
 
 
-/*
-module aksVMContrib 'modules/Identity/role.bicep' = {
-  name: 'aksVMContrib'
-  scope: resourceGroup(rg.name)
-  dependsOn: [
-    aksCluster    
-  ]
-  params: {
-    principalId: aksIdentity.outputs.principalId
-    roleGuid: '9980e02c-c2be-4d73-94e8-173b1dc7cf3c' //Virtual Machine Contributor
-  }
-}
-*/
 
 module aksMangedIDOperator 'modules/Identity/role.bicep' = {
   name: 'aksMangedIDOperator'
@@ -111,13 +93,12 @@ module aksCluster 'modules/aks/aks.bicep' = {
     aksMangedIDOperator    
   ]
   params: {
-    location: deployment().location
+    location: location
     basename: baseName
-    logworkspaceid: akslaworkspace.outputs.laworkspaceId
+   // logworkspaceid: akslaworkspace.outputs.laworkspaceId   // Uncomment this to configure log analytics workspace
     podBindingSelector: 'my-pod-identity'
     podIdentityName: 'my-pod-identity'
     podIdentityNamespace: 'my-app'
-    //publicKey: pubkeydata
     subnetId: subnetaks.id
     clientId: aksIdentity.outputs.clientId
     identityid: aksIdentity.outputs.identityid
@@ -130,9 +111,9 @@ module aksCluster 'modules/aks/aks.bicep' = {
 
 module cosmosdb 'modules/cosmos/cosmos.bicep'={
   scope:resourceGroup(rg.name)
-  name:'cosmosdb'
+  name:'cosmosDB'
   params:{
-    location: deployment().location
+    location: location
     principalId:aksIdentity.outputs.principalId
     accountName:cosmosName
   }
@@ -141,11 +122,11 @@ module cosmosdb 'modules/cosmos/cosmos.bicep'={
 
 
 module keyvault 'modules/keyvault/keyvault.bicep'={
-  name :'keyvault'
+  name :'keyVault'
   scope:resourceGroup(rg.name)  
   params:{
     basename:baseName
-    location:deployment().location
+    location:location
     principalId:aksIdentity.outputs.principalId
     cosmosEndpoint: cosmosdb.outputs.cosmosEndpoint
   }
