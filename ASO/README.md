@@ -21,6 +21,7 @@ ASO will provision the  following
 ## Deploy infrastructure with bicep
 
 1. Clone the repo
+
 Clone the repo and move to ASO folder
 
 ```azurecli
@@ -66,15 +67,15 @@ location='{Location}' # Location for deploying the resources
 az deployment sub create --name $baseline --location $location --template-file main.bicep --parameters @param.json
 ```
 
-![Deployment Started](assets\images\bicep_running.png)
+![Deployment Started](assets/images/bicep_running.png)
 
 The deployment could take somewhere around 20 to 30 mins. Once provisioning is completed you should see a JSON output with Succeeded as provisioning state.
 
-![Deployment Sucess](assets\images\bicep_sucess.png)
+![Deployment Sucess](assets/images/bicep_sucess.png)
 
 You can also see the deployment status in the Resource Group
 
-![Deployment Status inside RG](assets\images\rg_postdeployment.png)
+![Deployment Status inside RG](assets/images/rg_postdeployment.png)
 
 5. Link Azure Container Registry with AKS
 
@@ -102,7 +103,6 @@ The ASO is installed in your cluster and propagates changes to resources there t
 [Read more about how ASO works](https://github.com/azure/azure-service-operator#what-is-it)
 
 Follow [these instructions](https://github.com/Azure/azure-service-operator/tree/master/v2#installation) to install the ASO v2 operator in your cluster.
-Part of this installs the [custom resource definitions](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/) for the Azure and Cosmos DB resources.
 
 
 ## Deploy Cosmos DB with ASO
