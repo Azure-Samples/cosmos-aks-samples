@@ -195,7 +195,7 @@ It could take a few minutes for the Cosmos DB resources to be provisioned. In th
 
 1. Create a SQL role definition
 
-Using the following commands to create a SQL role definition as explained [here](https://docs.microsoft.com/en-us/cli/azure/cosmosdb/sql/role/definition?view=azure-cli-latest#az-cosmosdb-sql-role-definition-create).
+Use the following commands to create a SQL role definition as explained [here](https://docs.microsoft.com/en-us/cli/azure/cosmosdb/sql/role/definition?view=azure-cli-latest#az-cosmosdb-sql-role-definition-create).
 
 
 ```azurecli
@@ -240,7 +240,7 @@ Using Visual Studio build the application source code available in the Applicati
 
 2. Create pod secrets
 
-Pod Secrets provides a mechanism to hold sensitive information in the AKs cluster and pass it to the pods. Add your secrets in a JSON, save it as appsettings.secrets.json
+Pod Secrets provides a mechanism to hold sensitive information in the AKS cluster and pass it to the pods. Add your secrets in a JSON, save it as appsettings.secrets.json
 ```json
 {
     "CosmosEndpoint":  "https://{CosmosAccount Name}.documents.azure.com:443/" 
@@ -279,7 +279,7 @@ spec:
     spec:
       containers:
       - name: mycontainer
-        image: "{ACR Name}/{Image Name}:{Version}" # # update as per your environment, example myacrname.azurecr.io/todo:latest
+        image: "{ACR Name}/{Image Name}:{Version}" # update as per your environment, example myacrname.azurecr.io/todo:latest
         ports:
         - containerPort: 80
         env:
