@@ -1,34 +1,33 @@
 # Bicep and ASO to configure Cosmos DB sample ToDo App on AKS Cluster
 ## Overview
 
-This repo explains on how to use modular approach for Infrastructure as Code to provision a AKS cluster and few related resources using Bicep and ASO.
-* The bicep modules deploy the AKS infrastructure resources
-* ASO deploys a  Cosmos DB
+This repository explains on how to use modular approach for Infrastructure as Code to provision a AKS cluster and few related resources using [Bicep](https://docs.microsoft.com/en-us/azure/azure-resource-manager/bicep/overview?tabs=bicep) and [Azure Service Operators(ASO)](https://devblogs.microsoft.com/cse/2021/11/11/azure-service-operators-a-kubernetes-native-way-of-deploying-azure-resources/).
+* The Bicep modules deploy the AKS infrastructure resources
+* ASO deploys a Cosmos DB account along with a Database, and a Container
 
-You can start using these modules as is or modify to suit the needs.
 
-The bicep modules will provision the following Azure resources .
+The Bicep modules will provision the following Azure resources.
 1. A Resource Group with baseline variable
 2. A Managed Identity
-3. Azure Container Registry for storing images.
+3. Azure Container Registry for storing images
 4. A VNet required for configuring the AKS
 5. A AKS Cluster
 
-ASO will provision the  following
-1. A Cosmos DB SQL API Account along with a Database, a Container, and a SQL Role to manage RBAC
-2. Sample ToDo Application
+ASO will do the  following
+1. Provision a Cosmos DB SQL API Account along with a Database, and a Container
+2. Host the sample ToDo application
 
-## Deploy infrastructure with bicep
+## Deploy infrastructure with Bicep
 
-1. Clone the repo
+**1. Clone the repository**
 
-Clone the repo and move to ASO folder
+Clone the repository and move to ASO folder
 
 ```azurecli
 cd ASO
 ```
 
-2. Login to your Azure Account
+**2. Login to your Azure Account**
 
 ```azurecli
 az login
@@ -37,7 +36,7 @@ az account set -s <Subscription ID>
 ```
 
 
-3. Initilaize Parmaters
+**3. Initialize Parmaters**
 
 Create a param.json file by using the following JSON, using your own values for Resource Group Name, and Azure Container Registry instance Name. Refer to [Naming rules and restrictions for Azure resources] (https://docs.microsoft.com/en-us/azure/azure-resource-manager/management/resource-name-rules). 
 
@@ -56,7 +55,7 @@ Create a param.json file by using the following JSON, using your own values for 
 }
 ```
 
-4. Run Bicep Deployment
+**4. Run Bicep Deployment**
 
 Run the following script to create the deployment
 
@@ -77,7 +76,7 @@ You can also see the deployment status in the Resource Group
 
 ![Deployment Status inside RG](assets/images/rg_postdeployment.png)
 
-5. Link Azure Container Registry with AKS
+**5. Link Azure Container Registry with AKS**
 
 Integrate the ACR with the AKS cluster by supplying valid ACR name
 
@@ -90,14 +89,15 @@ az aks update -n $baseline'aks' -g $baseline'-rg' --attach-acr $acrName
 
 ## Set up Azure Service Operator
 
-1. Sign in to AKS CLuster
+**1. Sign in to AKS CLuster**
+
 Use [az aks get-credentials][az-aks-get-credentials] to sign in to your AKS cluster. This command also downloads and configures the kubectl client certificate on your development computer.
 
 ```azurecli
 az aks get-credentials -n $baseline'aks' -g $baseline'-rg'
 ```
 
-2. Install Azure Service Operator
+**2. Install Azure Service Operator**
 
 The ASO is installed in your cluster and propagates changes to resources there to the Azure Resource Manager.
 [Read more about how ASO works](https://github.com/azure/azure-service-operator#what-is-it)
@@ -109,7 +109,7 @@ Follow [these instructions](https://github.com/Azure/azure-service-operator/tree
 
 ASO helps you provision Azure resources and connect your applications to them from within Kubernetes. If you want to use Azure resources but would prefer to manage those resources using Kubernetes tooling and primitives (for example kubectl apply).
 
-1. The YAML template [cosmos-sql-demo.yaml](cosmos-sql-demo.yaml) creates the following:
+The YAML template [cosmos-sql-demo.yaml](cosmos-sql-demo.yaml) creates the following:
 
 * A Kubernetes namespace named `my-app`
 * An Azure resource group
@@ -182,7 +182,7 @@ spec:
 EOF
 ```
 
-The operator will start creating the Cosmos DB items in Azure. You can monitor their progress with:
+The operator will start creating the Cosmos DB account, database, and container in Azure. You can monitor their progress with:
 
 ```azurecli
 
@@ -193,7 +193,7 @@ It could take a few minutes for the Cosmos DB resources to be provisioned. In th
 
 ## Configure RBAC in Azure Cosmos DB
 
-1. Create a SQL role definition
+**1. Create a SQL role definition**
 
 Use the following commands to create a SQL role definition as explained [here](https://docs.microsoft.com/en-us/cli/azure/cosmosdb/sql/role/definition?view=azure-cli-latest#az-cosmosdb-sql-role-definition-create).
 
@@ -222,7 +222,7 @@ az cosmosdb sql role definition create --resource-group $asoRG --account-name $c
 }'
 ```
 
-2. Assignment of SQL Role in Cosmos DB
+**2. Assignment of SQL Role in Cosmos DB**
 
 Create a SQL role assignment under an Azure Cosmos DB account using Role Definition Name
 
@@ -234,11 +234,11 @@ az cosmosdb sql role assignment create --resource-group $asoRG  --account-name $
 
 ## Sample Application deployment
 
-1. Push the container image to Azure Container Registry
+**1. Push the container image to Azure Container Registry**
 
-Using Visual Studio build the application source code available in the Application folder, [publish the container image to the ACR] (https://docs.microsoft.com/en-us/visualstudio/containers/hosting-web-apps-in-docker?view=vs-2022).
+Using Visual Studio build the application source code available in the Application folder, [publish the container image to the ACR](https://docs.microsoft.com/en-us/visualstudio/containers/hosting-web-apps-in-docker?view=vs-2022).
 
-2. Create pod secrets
+**2. Create pod secrets**
 
 Pod Secrets provides a mechanism to hold sensitive information in the AKS cluster and pass it to the pods. Add your secrets in a JSON, save it as appsettings.secrets.json
 ```json
@@ -254,7 +254,7 @@ Execute th below command to create secrets that pods will use
 kubectl create secret generic secret-appsettings --namespace 'my-app' --from-file=appsettings.secrets.json
 ```
 
-3. App Deployment YAML
+**3. App Deployment YAML**
 
  Using the following YAML template create a akstodo-appdeploy.yml file, update your own values for ACR Name, Image Name, and Version 
 
@@ -311,7 +311,7 @@ spec:
 ``` 
 
 
-4. Apply Deployment YAML
+**4. Apply Deployment YAML**
 
 The following command deploys the application pods and exposes the pods via a load balancer.
 
@@ -319,7 +319,7 @@ The following command deploys the application pods and exposes the pods via a lo
 kubectl apply -f akstodo-appdeploy.yml --namespace 'my-app'
 ```
 
-5. Access the deployed application
+**5. Access the deployed application**
 
 Run the following command to view the external IP exposed by the load balancer
 
