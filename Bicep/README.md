@@ -10,14 +10,15 @@ The bicep modules will provision the following Azure Resources under subscriptio
 2. A Managed Identity
 3. An Azure Container Registry for storing images
 4. A VNet required for configuring the AKS
-5. An AKS Cluster with monitoring Addon
+5. An AKS Cluster
 6. A Cosmos DB SQL API Account along with a Database, Container, and SQL Role to manage RBAC
 7. A Key Vault to store secure keys
-8. A Log Analytics Workspace
+8. A Log Analytics Workspace (optional)
 
 ## Deploy infrastructure with bicep
 
 1. Clone the repo
+
 Clone the repo and move to Bicep folder
 
 ```azurecli
