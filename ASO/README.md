@@ -17,7 +17,8 @@ ASO will do the  following
 1. Provision a Cosmos DB SQL API Account along with a Database, and a Container
 2. Host the sample ToDo application
 
-## Prerequisute
+## Prerequisites
+* Visual Studio 2019
 
 ## Deploy infrastructure with Bicep
 
