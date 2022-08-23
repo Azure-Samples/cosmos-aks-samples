@@ -38,7 +38,7 @@ az account set -s <Subscription ID>
 
 **3. Initialize Parameters**
 
-Create a param.json file by using the following JSON, using your own values for Resource Group Name, Cosmos DB Account Name, and Azure Container Registry instance Name. Refer to [Naming rules and restrictions for Azure resources](https://docs.microsoft.com/en-us/azure/azure-resource-manager/management/resource-name-rules).
+Create a param.json file by using the following JSON, replace the {Resource Group Name}, {Cosmos DB Account Name}, and {ACR Instance Name} placeholders with your own values for Resource Group Name, Cosmos DB Account Name, and Azure Container Registry instance Name. Refer to [Naming rules and restrictions for Azure resources](https://docs.microsoft.com/en-us/azure/azure-resource-manager/management/resource-name-rules).
 
 ```json
 {
@@ -92,7 +92,7 @@ az aks update -n $baseline'aks' -g $baseline'-rg' --attach-acr $acrName
 
 **6. Sign in to AKS CLuster**
 
-Use [az aks get-credentials][az-aks-get-credentials] to sign in to your AKS cluster. This command also downloads and configures the kubectl client certificate on your development computer.
+Use [az aks get-credentials][az-aks-get-credentials] to sign in to your AKS cluster. This command also downloads and configures the kubectl client certificate on your environment.
 
 ```azurecli
 # az aks get-credentials -n $baseline'aks' -g $baseline'-rg'

@@ -17,6 +17,8 @@ ASO will do the  following
 1. Provision a Cosmos DB SQL API Account along with a Database, and a Container
 2. Host the sample ToDo application
 
+## Prerequisute
+
 ## Deploy infrastructure with Bicep
 
 **1. Clone the repository**
@@ -38,7 +40,7 @@ az account set -s <Subscription ID>
 
 **3. Initialize Parmaters**
 
-Create a param.json file by using the following JSON, using your own values for Resource Group Name, and Azure Container Registry instance Name. Refer to [Naming rules and restrictions for Azure resources] (https://docs.microsoft.com/en-us/azure/azure-resource-manager/management/resource-name-rules). 
+Create a param.json file by using the following JSON, replace the {Resource Group Name} and {ACR Instance Name} placeholders with your own values for Resource Group Name, and Azure Container Registry instance Name. Refer to [Naming rules and restrictions for Azure resources] (https://docs.microsoft.com/en-us/azure/azure-resource-manager/management/resource-name-rules). 
 
 ```json
 {
@@ -57,11 +59,11 @@ Create a param.json file by using the following JSON, using your own values for 
 
 **4. Run Bicep Deployment**
 
-Run the following script to create the deployment
+In the below given script replace the {Resource Group Name} and {Location} placeholder with your own value. Make sure to use same value  for {Resource Group Name} as supplied in param.json above. Run the following script to create the deployment
 
 ```azurecli
-baseline='{Deployment Name}'  # Deployment Name
-location='{Location}' # Location for deploying the resources
+baseline='{Resource Group Name}'  # Provide Resource Group Name, make sure it matches value in param.json
+location='{Location}' # Provide Location for deploying the resources
 
 az deployment sub create --name $baseline --location $location --template-file main.bicep --parameters @param.json
 ```
@@ -91,7 +93,7 @@ az aks update -n $baseline'aks' -g $baseline'-rg' --attach-acr $acrName
 
 **1. Sign in to AKS CLuster**
 
-Use [az aks get-credentials][az-aks-get-credentials] to sign in to your AKS cluster. This command also downloads and configures the kubectl client certificate on your development computer.
+Use [az aks get-credentials][az-aks-get-credentials] to sign in to your AKS cluster. This command also downloads and configures the kubectl client certificate on your environment.
 
 ```azurecli
 az aks get-credentials -n $baseline'aks' -g $baseline'-rg'
@@ -99,26 +101,26 @@ az aks get-credentials -n $baseline'aks' -g $baseline'-rg'
 
 **2. Install Azure Service Operator**
 
+Follow [these instructions](https://github.com/Azure/azure-service-operator/tree/master/v2#installation) to install the ASO v2 operator in your cluster.
+
 The ASO is installed in your cluster and propagates changes to resources there to the Azure Resource Manager.
 [Read more about how ASO works](https://github.com/azure/azure-service-operator#what-is-it)
-
-Follow [these instructions](https://github.com/Azure/azure-service-operator/tree/master/v2#installation) to install the ASO v2 operator in your cluster.
 
 
 ## Deploy Cosmos DB with ASO
 
 ASO helps you provision Azure resources and connect your applications to them from within Kubernetes. If you want to use Azure resources but would prefer to manage those resources using Kubernetes tooling and primitives (for example kubectl apply).
 
-The YAML template [cosmos-sql-demo.yaml](cosmos-sql-demo.yaml) creates the following:
+The YAML template cosmos-sql-demo.yaml creates the following:
 
 * A Kubernetes namespace named `my-app`
 * An Azure resource group
 * A Cosmos DB SQL API account, a database, and a container (equivalent to a table in the [Cosmos DB resource model](https://docs.microsoft.com/en-us/azure/cosmos-db/account-databases-containers-items))
 
-Execute the below command to apply the yaml and create the Cosmos DB Account and related resources. Make sure to update your own values for CosmosAccount Name.
+Execute the below command to apply the yaml and create the Cosmos DB Account and related resources. Make sure to update your own values by replacing the {Cosmos DB Account Name} placeholder.
 
 ```azurecli
-cosmosAccount={CosmosAccount Name}
+cosmosAccount={Cosmos DB Account Name}
 asoRG=$baseline'-aso-rg'
 
 cat <<EOF | kubectl apply -f -
@@ -186,27 +188,27 @@ The operator will start creating the Cosmos DB account, database, and container 
 
 ```azurecli
 
-watch kubectl get -n my-app resourcegroup,databaseaccount,sqldatabase,sqldatabasecontainer
+kubectl get -n my-app resourcegroup,databaseaccount,sqldatabase,sqldatabasecontainer
 ```
 
-It could take a few minutes for the Cosmos DB resources to be provisioned. In that time you might see some `ResourceNotFound` errors, or messages indicating that the database account isn't ready, on the SQL database or container. The operator will keep creating them once the account is available and the errors should eventually resolve themselves.
+Repeat  the above command till all Cosmos DB resources are in ready state. It could take a few minutes for the Cosmos DB resources to be provisioned. In that time you might see some `ResourceNotFound` errors, or messages indicating that the database account isn't ready, on the SQL database or container. The operator will keep creating them once the account is available and the errors should eventually resolve themselves.
 
 ## Configure RBAC in Azure Cosmos DB
 
 **1. Create a SQL role definition**
 
-Use the following commands to create a SQL role definition as explained [here](https://docs.microsoft.com/en-us/cli/azure/cosmosdb/sql/role/definition?view=azure-cli-latest#az-cosmosdb-sql-role-definition-create).
+Use the following commands to create a SQL role definition as explained [here](https://docs.microsoft.com/en-us/cli/azure/cosmosdb/sql/role/definition?view=azure-cli-latest#az-cosmosdb-sql-role-definition-create). Remember to replace {GUID} and {SQL ROLE NAME} placeholders with your own values.
 
 
 ```azurecli
 
-myCosmosdbscope=$(az cosmosdb show --resource-group $asoRG   --name $cosmosAccount  --query id  --output tsv)
+CosmosdbScope =$(az cosmosdb show --resource-group $asoRG   --name $cosmosAccount  --query id  --output tsv)
 
 identityResourceId=$(az identity show --name $baseline'identity' --resource-group $baseline'-rg' --query id  --output tsv)
 myIdentityPrincipal=$(az identity show --ids=$identityResourceId  --query principalId  --output tsv)
 az cosmosdb sql role definition create --resource-group $asoRG --account-name $cosmosAccount  --body '{
     "Id": "{GUID}",
-	"RoleName": "{SQL ROLE NAME}",
+	  "RoleName": "{SQL ROLE NAME}",
     "Type": "CustomRole",
     "AssignableScopes": ["/"],
     "Permissions": [{
@@ -229,21 +231,24 @@ Create a SQL role assignment under an Azure Cosmos DB account using Role Definit
 ```azurecli
 # Ensure Role Name matches with Role name provided in the previous step.
 
-az cosmosdb sql role assignment create --resource-group $asoRG  --account-name $cosmosAccount --role-definition-name {SQL ROLE NAME} --principal-id  $myIdentityPrincipal --scope $myCosmosdbscope
+az cosmosdb sql role assignment create --resource-group $asoRG  --account-name $cosmosAccount --role-definition-name {SQL ROLE NAME} --principal-id  $myIdentityPrincipal --scope $CosmosdbScope 
 ```
 
 ## Sample Application deployment
 
 **1. Push the container image to Azure Container Registry**
 
-Using Visual Studio build the application source code available in the Application folder, [publish the container image to the ACR](https://docs.microsoft.com/en-us/visualstudio/containers/hosting-web-apps-in-docker?view=vs-2022).
+Using Visual Studio build the application source code available in the Application folder, [publish the container image to the ACR](https://docs.microsoft.com/en-us/visualstudio/containers/hosting-web-apps-in-docker?view=vs-2022). In case you are using a Mac please use [these steps](https://docs.microsoft.com/en-us/azure/developer/javascript/tutorial/tutorial-vscode-docker-node/tutorial-vscode-docker-node-04#build-a-docker-image) to publish the image to ACR
 
 **2. Create pod secrets**
 
-Pod Secrets provides a mechanism to hold sensitive information in the AKS cluster and pass it to the pods. Add your secrets in a JSON, save it as appsettings.secrets.json
+Pod Secrets provides a mechanism to hold sensitive information in the AKS cluster and pass it to the pods. 
+
+Using the following JSON template nnd create a appsettings.secrets.json file. Replace the {Cosmos DB Account Name} placeholder with your own value.
+
 ```json
 {
-    "CosmosEndpoint":  "https://{CosmosAccount Name}.documents.azure.com:443/" 
+    "CosmosEndpoint":  "https://{Cosmos DB Account Name}.documents.azure.com:443/" 
 }
 
 ```
