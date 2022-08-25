@@ -19,7 +19,7 @@ This sample shows you how to use the Microsoft Azure Cosmos DB service to store 
 This sample can be deployed using the following two methods:
 
 * Bicep template: This sample uses Bicep template to deploy the AKS and other infrastructure resources (Resource Groups, VNet, Managed Identity, Key Vault, Azure Container Registry), and a Cosmos DB SQL account. It then deploys the the sample application on AKS using the Kubernetes command-line client, kubectl. This example uses Key Vault to store the application secrets.
-* ASO Deployment: This sample uses Bicep templaye only for deploying the the AKS infrastructure resources (Resource Groups, VNet, Managed Identity, ACR). It uses the Kubernetes command-line client, kubectl and Azure Service operator (ASO) to deploy the Cosmos DB SQL Account and host the sample application on AKS. This example doesn’t use Key Vault.
+* ASO deployment: This sample uses Bicep template only for deploying the the AKS infrastructure resources (Resource Groups, VNet, Managed Identity, ACR). It uses the Kubernetes command-line client, kubectl and Azure Service Operator (ASO) to deploy the Cosmos DB SQL account and host the sample application on AKS. This example doesn’t use Key Vault.
 
 ## Running the sample 
 To run this sample, follow the instructions in the ASO or Bicep folder. The steps provided will deploy the Azure resources and Cosmos DB account. It will also host the sample ToDo application on AKS.
