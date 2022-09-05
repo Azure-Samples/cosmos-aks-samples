@@ -150,7 +150,7 @@ kubectl apply -f secretproviderclass.yml
 
 **9. Push the container image to Azure Container Registry**
 
-The application can be built and pushed to ACR using Visual Studio or VS Code, use one of the two methods given below
+The application can be built and pushed to ACR using Visual Studio or VS Code, use any of the two methods given below
 **Using Visual Studio**
 
 Prerequisites: 
