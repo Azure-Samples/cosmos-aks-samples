@@ -1,14 +1,12 @@
 targetScope = 'subscription'
 
 // Parameters
-param baseName string
+param rgName string
 param acrName string
 param cosmosName string
+param location string =deployment().location
 
-var rgName = '${baseName}-rg'
-
-
-var location =deployment().location
+var baseName = rgName
 
 module rg 'modules/resource-group/rg.bicep' = {
   name: rgName
@@ -96,8 +94,8 @@ module aksCluster 'modules/aks/aks.bicep' = {
     location: location
     basename: baseName
    // logworkspaceid: akslaworkspace.outputs.laworkspaceId   // Uncomment this to configure log analytics workspace
-    podBindingSelector: 'my-pod-identity'
-    podIdentityName: 'my-pod-identity'
+    podBindingSelector: 'cosmostodo-apppodidentity'
+    podIdentityName: 'cosmostodo-apppodidentity'
     podIdentityNamespace: 'my-app'
     subnetId: subnetaks.id
     clientId: aksIdentity.outputs.clientId
