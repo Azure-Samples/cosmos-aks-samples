@@ -17,6 +17,18 @@ The Bicep modules will provision the following Azure Resources under subscriptio
 7. A Key Vault to store secure keys
 8. A Log Analytics Workspace (optional)
 
+You can configure the Azure Cosmos DB account to:
+
+1. Allow access only from a specific subnet of a virtual network (VNET) or make it accessible from any source.
+2. Authorize request accompanied by a valid authorization token or restrict access using RBAC and Managed Identity.
+
+This deployment uses the following best practices to enhance security of the Azure Cosmos DB account
+
+1. Limits access to the subnet by [configuring a virtual network service endpoint](https://docs.microsoft.com/azure/cosmos-db/how-to-configure-vnet-service-endpoint).
+2. Set disableLocalAuth = true in the databaseAccount resource to [enforce RBAC as the only authentication method](https://docs.microsoft.com//azure/cosmos-db/how-to-setup-rbac#disable-local-auth).
+
+Refer to the comments in Bicep\modules\cosmos\cosmos.bicep, and Bicep\modules\vnet\vnet.bicep files and edit these files as required to remove the above mentioned restrictions.
+
 ## Deploy infrastructure with Bicep
 
 **1. Clone the repository**
@@ -87,12 +99,13 @@ Set the environment variables by replacing the {ACR Instance Name}, {Resource Gr
 
 acrName='{ACR Instance Name}'
 rgName='{Resource Group Name}'
-aksName='{AKS Cluster Name}'
+
 ```
 
 Run the below command to integrate the ACR with the AKS cluster
 
 ```azurecli
+aksName=$rgName'aks'
 az aks update -n $aksName -g $rgName --attach-acr $acrName
 ```
 
@@ -263,5 +276,5 @@ Use the below commands to delete the Resource Group and Deployment
 
 ```azurecli
 az group delete -g $rgName -y
-az deployment sub delete -n $deplopymentName
+az deployment sub delete -n $deploymentName
 ```

@@ -138,7 +138,7 @@ metadata:
 spec:
   location: $location
 ---
-apiVersion: documentdb.azure.com/v1alpha1api20210515
+apiVersion: documentdb.azure.com/v1beta20210515
 kind: DatabaseAccount
 metadata:
   name: $cosmosAccount
@@ -152,7 +152,7 @@ spec:
   locations:
     - locationName: $location
 ---
-apiVersion: documentdb.azure.com/v1alpha1api20210515
+apiVersion: documentdb.azure.com/v1beta20210515
 kind: SqlDatabase
 metadata:
   name: todoapp
@@ -167,7 +167,7 @@ spec:
   resource:
     id: todoapp
 ---
-apiVersion: documentdb.azure.com/v1alpha1api20210515
+apiVersion: documentdb.azure.com/v1beta20210515
 kind: SqlDatabaseContainer
 metadata:
   name: tasks
