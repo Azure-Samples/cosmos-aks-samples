@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todo
+  labels:
+    aadpodidbinding: "my-pod-identity"
+    app: todo
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: todo
+  template:
+    metadata:
+      labels:
+        app: todo
+        aadpodidbinding: "my-pod-identity"
+    spec:
+      containers:
+      - name: mycontainer
+        image: "{ACR Name}/{Image Name}:{Version}" # update as per your environment, example myacrname.azurecr.io/todo:latest
+        ports:
+        - containerPort: 80
+        env:
+        - name: "ASPNETCORE_ENVIRONMENT"
+          value: ""
+        volumeMounts:
+        - name: secrets
+          mountPath: /app/secrets
+          readOnly: true
+      volumes:
+      - name: secrets
+        secret:
+          secretName: secret-appsettings
+---
+    
+kind: Service
+apiVersion: v1
+metadata:
+  name: todo
+spec:
+  selector:
+    app: todo
+    aadpodidbinding: "my-pod-identity"    
+  type: LoadBalancer
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
