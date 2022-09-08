@@ -121,10 +121,10 @@ ASO helps you provision Azure resources and connect your applications to them fr
 The YAML template cosmos-sql-demo.yaml creates the following:
 
 * A Kubernetes namespace named `my-app`
-* An Azure resource group
+* An new Azure Resource Group (Although having services for the same workload in multiple resource groups is an anti-pattern. We recommend a new resource group here so that deleting the deployment doesn't remove the primary resource group along with all its contained resources)
 * A Cosmos DB SQL API account, a database, and a container (equivalent to a table in the [Cosmos DB resource model](https://docs.microsoft.com/azure/cosmos-db/account-databases-containers-items))
 
-Using the following YAML template create a cosmos-deploy-aso.yml file, update  the value for {Location} placeholder with the value supplied in previous steps. Replace the value for {Cosmos DB Account Name}, and {ASO Resource Group Name}, placeholders with your own values.Make sure the resource name are complaint with [Naming rules and restrictions for Azure resources](https://docs.microsoft.com/azure/azure-resource-manager/management/resource-name-rules)
+Using the following YAML template create a cosmos-deploy-aso.yml file, update  the value for {Location} placeholder with the value supplied in previous steps. Replace the value for {Cosmos DB Account Name}, and {ASO Resource Group Name}, placeholders with your own values. Make sure the resource name are complaint with [Naming rules and restrictions for Azure resources](https://docs.microsoft.com/azure/azure-resource-manager/management/resource-name-rules)
 
 ```yml
 apiVersion: v1
