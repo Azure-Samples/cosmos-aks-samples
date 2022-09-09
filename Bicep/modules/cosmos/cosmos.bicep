@@ -7,6 +7,9 @@ param accountName string// = toLower('rgName-${uniqueString(resourceGroup().id)}
 @description('Friendly name for the SQL Role Definition')
 param roleDefinitionName string = 'My Read Write Role- No Delete'
 
+@description('Resource Id of the Subnet to enable service endpoints in Cosmos')
+param subNetId string
+
 @description('Data actions permitted by the Role Definition')
 param dataActions array = [
     'Microsoft.DocumentDB/databaseAccounts/readMetadata'
@@ -40,8 +43,17 @@ resource databaseAccount 'Microsoft.DocumentDB/databaseAccounts@2022-05-15' = {
     }
     locations: locations
     databaseAccountOfferType: 'Standard'
+    disableLocalAuth: true      // set to false if you want to use master keys in addition to RBAC
     enableAutomaticFailover: false
-    enableMultipleWriteLocations: false
+    enableMultipleWriteLocations: false   
+    isVirtualNetworkFilterEnabled: true     // set to false if you want to use public endpoint for Cosmos
+    //remove virtualNetworkRules if you want to use public endpoint for Cosmos
+    virtualNetworkRules: [
+          {
+              id: subNetId
+              ignoreMissingVNetServiceEndpoint: false
+          }
+      ]
   }
 }
 output cosmosEndpoint string = databaseAccount.name

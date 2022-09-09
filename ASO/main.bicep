@@ -1,14 +1,11 @@
 targetScope = 'subscription'
 
 // Parameters
-param baseName string
+param rgName string
 param acrName string
+param location string =deployment().location
 
-
-var rgName = '${baseName}-rg'
-
-
-var location =deployment().location
+var baseName = rgName
 
 module rg 'modules/resource-group/rg.bicep' = {
   name: rgName

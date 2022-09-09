@@ -1,0 +1,15 @@
+{
+  "RoleName": "{SQL ROLE NAME}",
+    "Type": "CustomRole",
+    "AssignableScopes": ["/"],
+    "Permissions": [{
+      "DataActions": [
+        "Microsoft.DocumentDB/databaseAccounts/readMetadata",
+       "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers/executeQuery",
+       "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers/readChangeFeed",
+       "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers/items/read",
+       "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers/items/upsert",
+       "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers/items/create"
+        ]
+    }]
+}

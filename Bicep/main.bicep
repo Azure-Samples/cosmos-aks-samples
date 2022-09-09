@@ -73,7 +73,6 @@ resource subnetaks 'Microsoft.Network/virtualNetworks/subnets@2020-11-01' existi
 }
 
 
-
 module aksMangedIDOperator 'modules/Identity/role.bicep' = {
   name: 'aksMangedIDOperator'
   scope: resourceGroup(rg.name)
@@ -114,6 +113,7 @@ module cosmosdb 'modules/cosmos/cosmos.bicep'={
     location: location
     principalId:aksIdentity.outputs.principalId
     accountName:cosmosName
+    subNetId: subnetaks.id
   }
 
 }
