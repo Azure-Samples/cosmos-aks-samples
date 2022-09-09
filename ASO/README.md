@@ -17,6 +17,9 @@ ASO will do the  following
 1. Provision a Cosmos DB SQL API Account along with a Database, and a Container
 2. Host the sample ToDo application
 
+### Architecture
+
+![Architecture Diagram](assets/images/cosmos-todo-aks-architecture.png)
 
 ## Deploy Infrastructure with Bicep
 

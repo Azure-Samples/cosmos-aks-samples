@@ -17,6 +17,10 @@ The Bicep modules will provision the following Azure Resources under subscriptio
 7. A Key Vault to store secure keys
 8. A Log Analytics Workspace (optional)
 
+### Architecture
+
+![Architecture Diagram](assets/images/cosmos-todo-aks-architecture.png)
+
 ### Securing the Cosmos DB account
 
 You can configure the Azure Cosmos DB account to:
