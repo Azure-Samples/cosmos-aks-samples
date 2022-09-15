@@ -91,7 +91,7 @@ az deployment sub create --name $deploymentName --location $location --template-
 
 The deployment could take somewhere around 20 to 30 mins. Once provisioning is completed you should see a JSON output with Succeeded as provisioning state.
 
-![Deployment Sucess](assets/images/bicep_sucess.png)
+![Deployment Success](assets/images/bicep_success.png)
 
 You can also see the deployment status in the Resource Group
 
@@ -99,7 +99,7 @@ You can also see the deployment status in the Resource Group
 
 **5. Link Azure Container Registry with AKS**
 
-Set the environment variables by replacing the {ACR Instance Name}, {Resource Group Name}, and {AKS Cluster Name} placeholders with your own values. The names should be complaint with [Naming rules and restrictions for Azure resources](https://docs.microsoft.com/azure/azure-resource-manager/management/resource-name-rules), also ensure that the below values for {ACR Instance Name} and {Resource Group Name} placeholders match with values supplied in param.json.
+Set the environment variables by replacing the {ACR Instance Name}, {Resource Group Name}, and {AKS Cluster Name} placeholders with your own values. The names should be compliant with [Naming rules and restrictions for Azure resources](https://docs.microsoft.com/azure/azure-resource-manager/management/resource-name-rules), also ensure that the below values for {ACR Instance Name} and {Resource Group Name} placeholders match with values supplied in param.json.
 
 ```azurecli
 

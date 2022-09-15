@@ -7,7 +7,7 @@ This repository explains on how to use modular approach for Infrastructure as Co
 
 
 The Bicep modules will provision the following Azure resources.
-1. A Resource Group with baseline variable
+1. A Resource Group
 2. A Managed Identity
 3. Azure Container Registry for storing images
 4. A VNet required for configuring the AKS
@@ -74,7 +74,7 @@ az deployment sub create --name $deploymentName --location $location --template-
 
 The deployment could take somewhere around 20 to 30 mins. Once provisioning is completed you should see a JSON output with Succeeded as provisioning state.
 
-![Deployment Sucess](assets/images/bicep_sucess.png)
+![Deployment Success](assets/images/bicep_success.png)
 
 You can also see the deployment status in the Resource Group
 
@@ -127,7 +127,7 @@ The YAML template cosmos-sql-demo.yaml creates the following:
 * An new Azure Resource Group (Although having services for the same workload in multiple resource groups is an anti-pattern. We recommend a new resource group here so that deleting the deployment doesn't remove the primary resource group along with all its contained resources)
 * A Cosmos DB SQL API account, a database, and a container (equivalent to a table in the [Cosmos DB resource model](https://docs.microsoft.com/azure/cosmos-db/account-databases-containers-items))
 
-Using the following YAML template create a cosmos-deploy-aso.yml file, update  the value for {Location} placeholder with the value supplied in previous steps. Replace the value for {Cosmos DB Account Name}, and {ASO Resource Group Name}, placeholders with your own values. Make sure the resource name are complaint with [Naming rules and restrictions for Azure resources](https://docs.microsoft.com/azure/azure-resource-manager/management/resource-name-rules)
+Using the following YAML template create a cosmos-deploy-aso.yml file, update  the value for {Location} placeholder with the value supplied in previous steps. Replace the value for {Cosmos DB Account Name}, and {ASO Resource Group Name}, placeholders with your own values. Make sure the resource name are compliant with [Naming rules and restrictions for Azure resources](https://docs.microsoft.com/azure/azure-resource-manager/management/resource-name-rules)
 
 ```yml
 apiVersion: v1
