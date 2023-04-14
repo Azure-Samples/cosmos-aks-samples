@@ -1,5 +1,9 @@
+resource "random_string" "kv" {
+  length = 8
+  special = false 
+}
 resource "azurerm_key_vault" "this" {
-  name                       = var.kv_name
+  name                       = "${var.kv_name}-${random_string.kv.result}"
   location                   = azurerm_resource_group.this.location
   resource_group_name        = azurerm_resource_group.this.name
   tenant_id                  = data.azurerm_client_config.current.tenant_id
@@ -22,7 +26,7 @@ resource "azurerm_key_vault_access_policy" "this" {
   key_vault_id       = azurerm_key_vault.this.id
   tenant_id          = data.azurerm_client_config.current.tenant_id
   object_id          = data.azurerm_client_config.current.object_id
-  secret_permissions = ["Get", "List", "Set", "Delete"]
+  secret_permissions = ["Get", "List", "Set", "Delete", "Purge"]
 }
 
 resource "azurerm_key_vault_secret" "cosmosdb_endpt" {

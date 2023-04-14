@@ -6,10 +6,6 @@ output "vnetName" {
   value = azurerm_virtual_network.this.name
 }
 
-output "vnetSubnets" {
-  value = azurerm_virtual_network.this.subnet
-}
-
 output "vnetSubnetId" {
   value = azurerm_subnet.this.id
 }
@@ -34,6 +30,10 @@ output "tenantId" {
   value = azurerm_user_assigned_identity.this.tenant_id
 }
 
-output "aks_name" {
+output "aksName" {
   value = azurerm_kubernetes_cluster.this.name
+}
+
+output "kvName" {
+  value = azurerm_key_vault.this.name 
 }
