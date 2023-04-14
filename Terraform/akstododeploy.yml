@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todo
+  labels:
+    app: todo
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: todo
+  template:
+    metadata:
+      labels:
+        app: todo
+        azure.workload.identity/use: "true"
+    spec:
+      serviceAccountName: "workload-identity-sa" #referenced in federated identity object
+      containers:
+      - name: mycontainer
+        image: "{your-acr-name}.azurecr.io/{image}:{version}"   # update as per your environment, example myacrname.azurecr.io/todo:latest. Do NOT add https:// in ACR Name
+        ports:
+        - containerPort: 80
+        env:
+        - name: KeyVaultName
+          value: "{your-key-vault-name}"     
+      nodeSelector:
+        kubernetes.io/os: linux
+      volumes:
+        - name: secrets-store01-inline
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: "azure-kv-workload-identity" # should match secretproviderclass name
+---
+    
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    azure.workload.identity/client-id: "{your-user-assigned-identity-clientid}"
+  labels:
+    azure.workload.identity/use: "true"
+  name: "workload-identity-sa"
+  namespace: "default"
+
+--- 
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: todo
+spec:
+  selector:
+    app: todo
+  type: LoadBalancer
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
