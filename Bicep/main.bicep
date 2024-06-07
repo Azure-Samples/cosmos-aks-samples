@@ -54,9 +54,6 @@ module acrDeploy 'modules/acr/acr.bicep' = {
   }
 }
 
-/*
-// Uncomment this to configure log analytics workspace
-
 module akslaworkspace 'modules/laworkspace/la.bicep' = {
   scope: resourceGroup(rg.name)
   name: 'akslaworkspace'
@@ -65,7 +62,7 @@ module akslaworkspace 'modules/laworkspace/la.bicep' = {
     location: location
   }
 }
-*/
+
 
 resource subnetaks 'Microsoft.Network/virtualNetworks/subnets@2020-11-01' existing = {
   name: 'aksSubNet'
@@ -103,6 +100,7 @@ module aksCluster 'modules/aks/aks.bicep' = {
       '${aksIdentity.outputs.identityid}' : {}
     }
     principalId: aksIdentity.outputs.principalId
+    workspaceId: akslaworkspace.outputs.laworkspaceId
   }
 }
 
@@ -127,7 +125,6 @@ module keyvault 'modules/keyvault/keyvault.bicep'={
     location:location
     principalId:aksIdentity.outputs.principalId
     cosmosEndpoint: cosmosdb.outputs.cosmosEndpoint
+    workspaceId: akslaworkspace.outputs.laworkspaceId
   }
-
 }
-

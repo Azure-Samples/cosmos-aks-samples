@@ -8,11 +8,10 @@ param location string = resourceGroup().location
 param podBindingSelector string
 param podIdentityName string
 param podIdentityNamespace string
+param workspaceId string
 
-//param logworkspaceid string  // Uncomment this to configure log analytics workspace
 
-
-resource aksCluster 'Microsoft.ContainerService/managedClusters@2022-06-02-preview' = {
+resource aksCluster 'Microsoft.ContainerService/managedClusters@2024-02-01' = {
   name: '${basename}aks'
   location: location
   identity: {
@@ -45,10 +44,8 @@ resource aksCluster 'Microsoft.ContainerService/managedClusters@2022-06-02-previ
       loadBalancerSku: 'standard'
       networkPlugin: 'azure'
       outboundType: 'loadBalancer'
-      dockerBridgeCidr: '172.17.0.1/16'
       dnsServiceIP: '10.0.0.10'
       serviceCidr: '10.0.0.0/16'
- 
     }
     apiServerAccessProfile: {
       enablePrivateCluster: false
@@ -56,16 +53,17 @@ resource aksCluster 'Microsoft.ContainerService/managedClusters@2022-06-02-previ
     enableRBAC: true
     enablePodSecurityPolicy: false
     addonProfiles:{
-      /*
-	  // Uncomment this to configure log analytics workspace
-	  omsagent: {
+	    omsagent: {
         config: {
-          logAnalyticsWorkspaceResourceID: logworkspaceid
+          logAnalyticsWorkspaceResourceID: workspaceId
         }
         enabled: true
-      }*/
+      }
       azureKeyvaultSecretsProvider: {
         enabled: true
+        config: {
+          enableSecretRotation: 'true'
+        }
       }
       azurepolicy: {
         enabled: false
@@ -95,16 +93,46 @@ resource aksCluster 'Microsoft.ContainerService/managedClusters@2022-06-02-previ
       ]
     }
     disableLocalAccounts: false
-  }
+    autoUpgradeProfile: {
+      upgradeChannel: 'stable'
+    }
+    securityProfile: {
+      defender: {
+        logAnalyticsWorkspaceResourceId: workspaceId
+        securityMonitoring: {
+          enabled: true
+        }
+      }
+    }
+  } 
 }
 
 
 
+var aksDiagCategories = [
+  'cluster-autoscaler'
+  'kube-controller-manager'
+  'kube-audit-admin'
+  'guard'
+]
 
-
-
-
-
-
-
-
+// TODO: Update diagnostics to be its own module
+// Blocking issue: https://github.com/Azure/bicep/issues/622
+// Unable to pass in a `resource` scope or unable to use string interpolation in resource types
+resource diagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if (!empty(workspaceId)) {
+  name: 'aks-diagnostics'
+  scope: aksCluster
+  properties: {
+    workspaceId: workspaceId
+    logs: [for category in aksDiagCategories: {
+      category: category
+      enabled: true
+    }]
+    metrics: [
+      {
+        category: 'AllMetrics'
+        enabled: true
+      }
+    ]
+  }
+}
