@@ -19,7 +19,7 @@ resource aksCluster 'Microsoft.ContainerService/managedClusters@2024-02-01' = {
     userAssignedIdentities: identity   
   }
   properties: {
-    kubernetesVersion: '1.22.11'
+    kubernetesVersion: '1.29'
     nodeResourceGroup: '${basename}-aksInfraRG'
     dnsPrefix: '${basename}aks'
     agentPoolProfiles: [
