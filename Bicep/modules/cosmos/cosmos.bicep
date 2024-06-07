@@ -33,7 +33,7 @@ var locations = [
 var roleDefinitionId = guid('sql-role-definition-', principalId, databaseAccount.id)
 var roleAssignmentId = guid(roleDefinitionId, principalId, databaseAccount.id)
 
-resource databaseAccount 'Microsoft.DocumentDB/databaseAccounts@2022-05-15' = {
+resource databaseAccount 'Microsoft.DocumentDB/databaseAccounts@2024-05-15' = {
   name: accountName
   kind: 'GlobalDocumentDB'
   location: location
@@ -54,6 +54,8 @@ resource databaseAccount 'Microsoft.DocumentDB/databaseAccounts@2022-05-15' = {
               ignoreMissingVNetServiceEndpoint: false
           }
       ]
+    minimalTlsVersion: 'Tls12'
+    disableKeyBasedMetadataWriteAccess: true
   }
 }
 output cosmosEndpoint string = databaseAccount.name

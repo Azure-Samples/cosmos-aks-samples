@@ -2,6 +2,7 @@ param cosmosEndpoint string
 param location string = resourceGroup().location
 param principalId string
 param basename string
+param workspaceId string
 
 resource keyvault 'Microsoft.KeyVault/vaults@2022-07-01' = {
   name: '${basename}kv'
@@ -38,6 +39,20 @@ resource keyvault 'Microsoft.KeyVault/vaults@2022-07-01' = {
     }
     softDeleteRetentionInDays: 10
     tenantId:  subscription().tenantId
+  }
+}
+
+resource logs 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: 'logs'
+  scope: keyvault
+  properties: {
+    workspaceId: workspaceId
+    logs: [
+      {
+        category: 'AuditEvent'
+        enabled: true
+      }
+    ]
   }
 }
 
