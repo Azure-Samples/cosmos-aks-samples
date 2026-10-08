@@ -90,17 +90,21 @@ module aksCluster 'modules/aks/aks.bicep' = {
     location: location
     basename: baseName
    // logworkspaceid: akslaworkspace.outputs.laworkspaceId   // Uncomment this to configure log analytics workspace
-    podBindingSelector: 'cosmostodo-apppodidentity'
-    podIdentityName: 'cosmostodo-apppodidentity'
-    podIdentityNamespace: 'my-app'
     subnetId: subnetaks.id
-    clientId: aksIdentity.outputs.clientId
-    identityid: aksIdentity.outputs.identityid
     identity: {
       '${aksIdentity.outputs.identityid}' : {}
     }
-    principalId: aksIdentity.outputs.principalId
     workspaceId: akslaworkspace.outputs.laworkspaceId
+  }
+}
+
+module federatedIdentity 'modules/Identity/federated.bicep' = {
+  scope: resourceGroup(rg.name)
+  name: 'federatedIdentity'
+  params: {
+    basename: baseName
+    issuerUrl: aksCluster.outputs.oidcIssuerUrl
+    subject: 'system:serviceaccount:my-app:workload-identity-sa'
   }
 }
 

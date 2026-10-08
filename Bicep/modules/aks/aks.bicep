@@ -1,13 +1,7 @@
 param basename string
 param subnetId string
 param identity object
-param identityid string
-param clientId string
-param principalId string
 param location string = resourceGroup().location
-param podBindingSelector string
-param podIdentityName string
-param podIdentityNamespace string
 param workspaceId string
 
 
@@ -19,7 +13,6 @@ resource aksCluster 'Microsoft.ContainerService/managedClusters@2024-02-01' = {
     userAssignedIdentities: identity   
   }
   properties: {
-    kubernetesVersion: '1.29'
     nodeResourceGroup: '${basename}-aksInfraRG'
     dnsPrefix: '${basename}aks'
     agentPoolProfiles: [
@@ -70,33 +63,17 @@ resource aksCluster 'Microsoft.ContainerService/managedClusters@2024-02-01' = {
       }
     }
     
-    podIdentityProfile: {
+    oidcIssuerProfile: {
       enabled: true
-      userAssignedIdentities: [
-        {
-          bindingSelector: podBindingSelector
-          identity: {
-            clientId: clientId
-            resourceId: identityid
-            objectId: principalId
-          }
-          name: podIdentityName
-          namespace: podIdentityNamespace
-        }
-      ]
-      userAssignedIdentityExceptions: [
-        {
-          name: 'string'
-          namespace: 'string'
-          podLabels: {}
-        }
-      ]
     }
     disableLocalAccounts: false
     autoUpgradeProfile: {
       upgradeChannel: 'stable'
     }
     securityProfile: {
+      workloadIdentity: {
+        enabled: true
+      }
       defender: {
         logAnalyticsWorkspaceResourceId: workspaceId
         securityMonitoring: {
@@ -107,6 +84,7 @@ resource aksCluster 'Microsoft.ContainerService/managedClusters@2024-02-01' = {
   } 
 }
 
+output oidcIssuerUrl string = aksCluster.properties.oidcIssuerProfile.issuerURL
 
 
 var aksDiagCategories = [

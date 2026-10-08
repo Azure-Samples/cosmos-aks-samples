@@ -12,7 +12,7 @@ module main 'main.bicep' = {
   params: {
     rgName: 'test'
     acrName: 'testacr'
-    cosmosName: 'testcosmos'
+    cosmosName: 'TestCosmos'
     location: location
   }
 }

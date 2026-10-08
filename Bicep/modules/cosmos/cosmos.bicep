@@ -34,7 +34,7 @@ var roleDefinitionId = guid('sql-role-definition-', principalId, databaseAccount
 var roleAssignmentId = guid(roleDefinitionId, principalId, databaseAccount.id)
 
 resource databaseAccount 'Microsoft.DocumentDB/databaseAccounts@2024-05-15' = {
-  name: accountName
+  name: toLower(accountName)
   kind: 'GlobalDocumentDB'
   location: location
   properties: {
@@ -61,7 +61,8 @@ resource databaseAccount 'Microsoft.DocumentDB/databaseAccounts@2024-05-15' = {
 output cosmosEndpoint string = databaseAccount.name
 
 resource sqlRoleDefinition 'Microsoft.DocumentDB/databaseAccounts/sqlRoleDefinitions@2022-05-15' = {
-  name: '${databaseAccount.name}/${roleDefinitionId}'
+  name: roleDefinitionId
+  parent: databaseAccount
   properties: {
     roleName: roleDefinitionName
     type: 'CustomRole'
@@ -77,7 +78,8 @@ resource sqlRoleDefinition 'Microsoft.DocumentDB/databaseAccounts/sqlRoleDefinit
 }
 
 resource sqlRoleAssignment 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments@2022-05-15' = {
-  name: '${databaseAccount.name}/${roleAssignmentId}'
+  name: roleAssignmentId
+  parent: databaseAccount
   properties: {
     roleDefinitionId: sqlRoleDefinition.id
     principalId: principalId
@@ -87,7 +89,8 @@ resource sqlRoleAssignment 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignm
 
 
 resource database 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases@2021-10-15' = {
-  name: '${databaseAccount.name}/todoapp'
+  name: 'todoapp'
+  parent: databaseAccount
   properties: {
     resource: {
       id: 'todoapp'
@@ -96,7 +99,8 @@ resource database 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases@2021-10-15
 }
 
 resource container 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2021-10-15' = {
-  name: '${database.name}/${'tasks'}'
+  name: 'tasks'
+  parent: database
   properties: {
     resource: {
       id: 'tasks'
@@ -109,5 +113,4 @@ resource container 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/container
     }
   }
 }
-
 
