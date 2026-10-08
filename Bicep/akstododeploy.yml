@@ -3,7 +3,6 @@ kind: Deployment
 metadata:
   name: todo
   labels:
-    aadpodidbinding: "cosmostodo-apppodidentity"
     app: todo
 spec:
   replicas: 2
@@ -14,8 +13,9 @@ spec:
     metadata:
       labels:
         app: todo
-        aadpodidbinding: "cosmostodo-apppodidentity"
+        azure.workload.identity/use: "true"
     spec:
+      serviceAccountName: "workload-identity-sa"
       containers:
       - name: mycontainer
         image: "{ACR Name}/{Image Name}:{Version}"   # update as per your environment, example myacrname.azurecr.io/todo:latest. Do NOT add https:// in ACR Name
@@ -32,7 +32,16 @@ spec:
             driver: secrets-store.csi.k8s.io
             readOnly: true
             volumeAttributes:
-              secretProviderClass: "azure-kvname-podid"       
+              secretProviderClass: "azure-kv-workload-identity"
+---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: workload-identity-sa
+  namespace: my-app
+  annotations:
+    azure.workload.identity/client-id: "{Managed Identity Client ID}"
 ---
     
 kind: Service
@@ -42,7 +51,6 @@ metadata:
 spec:
   selector:
     app: todo
-    aadpodidbinding: "cosmostodo-apppodidentity"    
   type: LoadBalancer
   ports:
   - protocol: TCP
