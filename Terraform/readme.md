@@ -34,7 +34,7 @@ This deployment uses the following best practices to enhance security of the Azu
 
 Refer to the comments in *cosmosdb.tf*, and *vnet.tf* files and edit these files as required to remove the above mentioned restrictions.
 
-## Deploy infrastructure with Bicep
+## Deploy infrastructure with Terraform
 
 **1. Clone the repository**
 
@@ -102,7 +102,7 @@ First, find the values of your  Tenant ID (homeTenantId) using the command below
 az account show
 ```
 
-Using the following YAML template create a secretproviderclass.yml. Make sure to update your own values for {Tenant Id} and {Resource Group Name} placeholders. Ensure that the below values for {Resource Group Name} placeholder matches with values supplied in param.json.
+Using the following YAML template create a secretproviderclass.yml. Make sure to update your own values for {Tenant Id} and {Resource Group Name} placeholders. Ensure that the below values for {Resource Group Name} placeholder matches with values supplied in terraform.tfvars.
 
 ```yml
 # This is a SecretProviderClass example using workloads identity to access the key vault
