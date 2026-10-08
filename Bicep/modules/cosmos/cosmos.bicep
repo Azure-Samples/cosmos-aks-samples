@@ -5,10 +5,14 @@ param location string = resourceGroup().location
 param accountName string// = toLower('rgName-${uniqueString(resourceGroup().id)}-cosmossql')
 
 @description('Friendly name for the SQL Role Definition')
-param roleDefinitionName string = 'My Read Write Role- No Delete'
+param roleDefinitionName string = 'Todo application read/write role'
 
 @description('Resource Id of the Subnet to enable service endpoints in Cosmos')
 param subNetId string
+param databaseName string = 'todoapp'
+param containerName string = 'tasks'
+@minValue(400)
+param throughput int = 400
 
 @description('Data actions permitted by the Role Definition')
 param dataActions array = [
@@ -18,6 +22,8 @@ param dataActions array = [
     'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers/items/read'
     'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers/items/upsert'
     'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers/items/create'
+    'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers/items/replace'
+    'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers/items/delete'
 ]
 
 @description('Object ID of the AAD identity. Must be a GUID.')
@@ -47,6 +53,7 @@ resource databaseAccount 'Microsoft.DocumentDB/databaseAccounts@2024-05-15' = {
     enableAutomaticFailover: false
     enableMultipleWriteLocations: false   
     isVirtualNetworkFilterEnabled: true     // set to false if you want to use public endpoint for Cosmos
+    publicNetworkAccess: 'Enabled'
     //remove virtualNetworkRules if you want to use public endpoint for Cosmos
     virtualNetworkRules: [
           {
@@ -58,7 +65,7 @@ resource databaseAccount 'Microsoft.DocumentDB/databaseAccounts@2024-05-15' = {
     disableKeyBasedMetadataWriteAccess: true
   }
 }
-output cosmosEndpoint string = databaseAccount.name
+output cosmosEndpoint string = databaseAccount.properties.documentEndpoint
 
 resource sqlRoleDefinition 'Microsoft.DocumentDB/databaseAccounts/sqlRoleDefinitions@2022-05-15' = {
   name: roleDefinitionId
@@ -88,22 +95,25 @@ resource sqlRoleAssignment 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignm
 }
 
 
-resource database 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases@2021-10-15' = {
-  name: 'todoapp'
+resource database 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases@2024-05-15' = {
+  name: databaseName
   parent: databaseAccount
   properties: {
     resource: {
-      id: 'todoapp'
+      id: databaseName
+    }
+    options: {
+      throughput: throughput
     }
   }
 }
 
-resource container 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2021-10-15' = {
-  name: 'tasks'
+resource container 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2024-05-15' = {
+  name: containerName
   parent: database
   properties: {
     resource: {
-      id: 'tasks'
+      id: containerName
       partitionKey: {
         paths: [
           '/id'
@@ -113,4 +123,3 @@ resource container 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/container
     }
   }
 }
-

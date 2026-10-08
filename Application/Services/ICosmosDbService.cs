@@ -6,10 +6,19 @@
 
     public interface ICosmosDbService
     {
-        Task<IEnumerable<Item>> GetItemsAsync(string query);
-        Task<Item> GetItemAsync(string id);
-        Task AddItemAsync(Item item);
-        Task UpdateItemAsync(string id, Item item);
-        Task DeleteItemAsync(string id);
+        Task<IReadOnlyList<Item>> GetItemsAsync(string ownerId);
+        Task<Item?> GetItemAsync(string id, string ownerId);
+        Task<Item> CreateItemAsync(
+            string ownerId,
+            string name,
+            string? description,
+            bool completed);
+        Task<bool> UpdateItemAsync(
+            string id,
+            string ownerId,
+            string name,
+            string? description,
+            bool completed);
+        Task<bool> DeleteItemAsync(string id, string ownerId);
     }
 }

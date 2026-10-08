@@ -1,56 +1,89 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: my-app
+  name: todo-app
 ---
-apiVersion: resources.azure.com/v1beta20200601
+apiVersion: resources.azure.com/v1api20200601
 kind: ResourceGroup
 metadata:
-  name: {ASO Resource Group Name} 
-  namespace: my-app
+  name: "{ASO Resource Group Name}"
+  namespace: todo-app
 spec:
-  location: {Location}
-  azureName: {ASO Resource Group Name} 
+  location: "{Location}"
 ---
-apiVersion: documentdb.azure.com/v1beta20210515
+apiVersion: documentdb.azure.com/v1api20240815
 kind: DatabaseAccount
 metadata:
-  name: {Cosmos DB Account Name}
-  namespace: my-app
+  name: "{Cosmos DB Account Name}"
+  namespace: todo-app
 spec:
-  location: {Location}  
+  location: "{Location}"
   owner:
-    name: {ASO Resource Group Name} 
+    name: "{ASO Resource Group Name}"
   kind: GlobalDocumentDB
   databaseAccountOfferType: Standard
+  disableKeyBasedMetadataWriteAccess: true
+  disableLocalAuth: true
+  isVirtualNetworkFilterEnabled: true
+  minimalTlsVersion: Tls12
+  publicNetworkAccess: Enabled
+  virtualNetworkRules:
+  - id: "{AKS Subnet Resource ID}"
+    ignoreMissingVNetServiceEndpoint: false
   locations:
-    - locationName: {Location}
+  - locationName: "{Location}"
 ---
-apiVersion: documentdb.azure.com/v1beta20210515
+apiVersion: documentdb.azure.com/v1api20240815
 kind: SqlDatabase
 metadata:
   name: todoapp
-  namespace: my-app
+  namespace: todo-app
 spec:
-  location: {Location}
+  location: "{Location}"
   owner:
-    name: {Cosmos DB Account Name}
+    name: "{Cosmos DB Account Name}"
   options:
     throughput: 400
   resource:
     id: todoapp
 ---
-apiVersion: documentdb.azure.com/v1beta20210515
+apiVersion: documentdb.azure.com/v1api20240815
 kind: SqlDatabaseContainer
 metadata:
   name: tasks
-  namespace: my-app
+  namespace: todo-app
 spec:
-  location: {Location}
+  location: "{Location}"
   owner:
     name: todoapp
   resource:
     id: tasks
     partitionKey:
       kind: Hash
-      paths: ["/id"]
+      paths:
+      - /id
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: workload-identity-settings
+  namespace: todo-app
+data:
+  principalId: "{Workload Identity Principal ID}"
+---
+# ASO v2 supports SqlRoleAssignment but not custom SqlRoleDefinition. Create the
+# custom definition from sql-role-definition.json, then substitute its resource ID.
+apiVersion: documentdb.azure.com/v1api20240815
+kind: SqlRoleAssignment
+metadata:
+  name: todo-app-role-assignment
+  namespace: todo-app
+spec:
+  azureName: "{Role Assignment GUID}"
+  owner:
+    name: "{Cosmos DB Account Name}"
+  principalIdFromConfig:
+    name: workload-identity-settings
+    key: principalId
+  roleDefinitionId: "{Cosmos SQL Role Definition Resource ID}"
+  scope: "{Cosmos DB Account Resource ID}"

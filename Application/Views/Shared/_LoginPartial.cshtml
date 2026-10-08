@@ -1,0 +1,13 @@
+@if (User.Identity?.IsAuthenticated == true)
+{
+    <p>
+        <span>@User.Identity.Name</span>
+        <a asp-area="MicrosoftIdentity" asp-controller="Account" asp-action="SignOut">Sign out</a>
+    </p>
+}
+else
+{
+    <p>
+        <a asp-area="MicrosoftIdentity" asp-controller="Account" asp-action="SignIn">Sign in</a>
+    </p>
+}

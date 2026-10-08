@@ -3,5 +3,5 @@ resource "azurerm_container_registry" "this" {
   location            = azurerm_resource_group.this.location
   resource_group_name = azurerm_resource_group.this.name
   sku                 = var.acr_sku
-  admin_enabled       = true
+  admin_enabled       = false
 }

@@ -5,18 +5,19 @@
       "launchBrowser": true,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "VaultUri": "https://{VaultName}.vault.azure.net/"
+        "KeyVaultUri": "https://{VaultName}.vault.azure.net/"
       },
-      "applicationUrl": "https://localhost:63709;http://localhost:63710"
+      "applicationUrl": "https://localhost:63709;http://localhost:8080"
     },
     "Docker": {
       "commandName": "Docker",
       "launchBrowser": true,
       "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}",
-      "publishAllPorts": true,
-      "useSSL": true,
+      "publishAllPorts": false,
+      "httpPort": 8080,
+      "useSSL": false,
       "environmentVariables": {
-        "VaultUri": "https://{VaultName}.vault.azure.net/"
+        "KeyVaultUri": "https://{VaultName}.vault.azure.net/"
       }
     }
   }

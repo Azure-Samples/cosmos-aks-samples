@@ -1,27 +1,120 @@
-# Cosmos DB sample ToDo App on AKS Cluster
+# Cosmos DB ToDo application on AKS
 
-A Web reference ASP.NET Core MVC application that demonstrates how to use the Microsoft Azure Cosmos DB service to store and access data. The application is designed to be deployed on Azure Kubernetes Services(AKS) using [Bicep](https://docs.microsoft.com/en-us/azure/azure-resource-manager/bicep/overview?tabs=bicep), [Terraform](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs), and [Azure Service Operators(ASO)](https://devblogs.microsoft.com/cse/2021/11/11/azure-service-operators-a-kubernetes-native-way-of-deploying-azure-resources/)
+This sample is an ASP.NET Core MVC application on **.NET 10** that stores per-user
+ToDo items in Azure Cosmos DB for NoSQL. It can be provisioned with
+[Bicep](Bicep/README.md), [Terraform](Terraform/readme.md), or
+[Azure Service Operator (ASO) v2](ASO/README.md).
 
+## Architecture and security
+
+- The application container listens on port `8080`. The Kubernetes services are
+  `ClusterIP` services that forward service port `80` to container port `8080`.
+- Microsoft Entra user sign-in and AKS Workload Identity are separate:
+  - [Microsoft.Identity.Web](https://learn.microsoft.com/entra/identity-platform/scenario-web-app-sign-user-overview)
+    authenticates website users against one Microsoft Entra tenant.
+  - [AKS Workload Identity](https://learn.microsoft.com/azure/aks/workload-identity-overview)
+    authenticates the pod to Azure so `DefaultAzureCredential` can access Cosmos DB
+    and, when configured, Key Vault.
+- Cosmos DB local/key authentication is disabled. The workload managed identity
+  receives a custom Cosmos data-plane role with query, read, create, upsert,
+  replace, and delete permissions.
+- Items are owner-scoped by the signed-in user's immutable Microsoft Entra `oid`
+  claim. Existing documents without `ownerId` are intentionally invisible; migrate
+  them explicitly to an owner before using this version. The Cosmos container
+  partition key remains `/id`.
+- Each deployment manifest intentionally uses one replica. ASP.NET Core Data
+  Protection keys currently use pod-local ephemeral storage; configure a durable,
+  shared, protected key ring before scaling above one replica.
+- The sample does not expose public HTTP. The operator must supply TLS termination,
+  ingress or another reverse proxy, DNS, and certificates. Set
+  `ForwardedHeaders:KnownProxies` to the trusted proxy IP addresses so generated
+  OpenID Connect URLs use the original HTTPS scheme. Do not trust arbitrary
+  forwarded headers.
 
 ## Prerequisites
 
-Before you can run this sample, you must have the following prerequisites:
-* An Azure Subscription - If you don't have an account, [Sign up for a free trial](https://azure.microsoft.com/en-us/free/).
-* Clone this repository or download the zip file.
-* [Docker Desktop](https://docs.docker.com/desktop/)
-* [Visual Studio 2022](https://visualstudio.microsoft.com/downloads) with the Web Development, Azure Tools workload, and/or .NET Core cross-platform development workload installed
-* [.NET Core Development Tools](https://dotnet.microsoft.com/download/dotnet-core/) for development with .NET Core
-* [Terraform](https://developer.hashicorp.com/terraform/tutorials/azure-get-started/install-cli) for terraform deployment method.
+- An Azure subscription and permission to create the resources used by the selected
+  deployment flow.
+- Azure CLI, `kubectl`, and either Bicep or Terraform as described in the deployment
+  guide.
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0).
+- Docker-compatible OCI tooling: Docker Engine or Podman. Docker Desktop is not
+  required.
+- A real, single-tenant Microsoft Entra **web application registration**.
 
-## Overview
+### Microsoft Entra web application registration
 
-This sample shows you how to use the Microsoft Azure Cosmos DB service to store and access data from an ASP.NET Core MVC application. This application uses Managed Identity and Cosmos RBAC. The application is published as a docker container and can be hosted on Azure Kubernetes Services (AKS).
+Create the web app registration before deploying:
 
-This sample can be deployed using the following three methods:
+1. Configure it for one tenant and record its application (client) ID and tenant ID.
+2. Register `https://<operator-host>/signin-oidc` as the web redirect URI and
+   `https://<operator-host>/signout-callback-oidc` as the signed-out callback URL.
+3. On the app registration, add a federated identity credential for the
+   user-assigned managed identity used by the AKS workload:
 
-* Bicep template: This sample uses Bicep template to deploy the AKS and other infrastructure resources (Resource Groups, VNet, Managed Identity, Key Vault, Azure Container Registry), and a Cosmos DB SQL account. It then deploys the the sample application on AKS using the Kubernetes command-line client, kubectl. This example uses Key Vault to store the application secrets.
-* ASO deployment: This sample uses Bicep template only for deploying the the AKS infrastructure resources (Resource Groups, VNet, Managed Identity, ACR). It uses the Kubernetes command-line client, kubectl and Azure Service Operator (ASO) to deploy the Cosmos DB SQL account and host the sample application on AKS. This example doesn’t use Key Vault.
-* Terraform template: This sample uses Terraform to deploy the AKS and other infrastructure resources (Resource Groups, VNet, Managed Identity, Key Vault, Azure Container Registry), and a Cosmos DB SQL account. It then deploys the the sample application on AKS using the Kubernetes command-line client, kubectl. This example uses Key Vault to store the application secrets.
+   | Field | Value |
+   |---|---|
+   | Issuer | `https://login.microsoftonline.com/<tenant-id>/v2.0` |
+   | Subject | Managed identity principal/object ID |
+   | Audience | `api://AzureADTokenExchange` |
 
-## Running the sample 
-To run this sample, follow the instructions in the ASO, Bicep or Terraform folder. The steps provided will deploy the Azure resources and Cosmos DB account. It will also host the sample ToDo application on AKS.
+This app-registration credential is additional to the AKS OIDC federated credential
+that binds the Kubernetes service account to the managed identity. They solve
+different authentication hops.
+
+`AzureAd:ClientId` is the **Entra web app client ID**. The service-account annotation
+and `AzureAd:ClientCredentials:0:ManagedIdentityClientId` use the **workload managed
+identity client ID**. Do not interchange them.
+
+Production uses Microsoft.Identity.Web
+`SignedAssertionFromManagedIdentity`, so no Entra client secret belongs in
+Kubernetes manifests, Bicep, Terraform state, Key Vault, or another production
+configuration surface.
+
+## Local development
+
+Use user-secrets for the local confidential-client credential:
+
+```powershell
+cd Application
+dotnet user-secrets set "AzureAd:TenantId" "<tenant-id>"
+dotnet user-secrets set "AzureAd:ClientId" "<entra-web-app-client-id>"
+dotnet user-secrets set "AzureAd:ClientSecret" "<local-development-secret>"
+dotnet user-secrets set "CosmosEndpoint" "https://<account>.documents.azure.com:443/"
+dotnet run
+```
+
+The client secret is for local development only. The signed-in developer also needs
+an Azure credential and the required Cosmos data-plane role.
+
+Build and run the OCI image with either engine:
+
+```powershell
+cd Application
+docker build -t todo:local .
+docker run --rm -p 8080:8080 --env-file .env.local todo:local
+
+# Podman equivalents
+podman build -t todo:local .
+podman run --rm -p 8080:8080 --env-file .env.local todo:local
+```
+
+Keep `.env.local` untracked and use it only for local configuration. For VS Code Dev
+Containers backed by Podman, set
+`"dev.containers.dockerPath": "podman"` in host/user settings. This repository does
+not use Compose or a mounted host socket, so `dockerComposePath` and socket settings
+are unnecessary unless that integration is added later.
+
+## Build and test
+
+```powershell
+dotnet restore Application\todo.sln
+dotnet build Application\todo.sln --configuration Release --no-restore
+dotnet test Application\todo.sln --configuration Release --no-build
+```
+
+Choose a deployment flow:
+
+- [Bicep](Bicep/README.md)
+- [Terraform](Terraform/readme.md)
+- [Azure Service Operator v2](ASO/README.md)

@@ -1,32 +1,29 @@
 resource "random_string" "kv" {
-  length = 8
-  special = false 
+  length  = 8
+  special = false
 }
 resource "azurerm_key_vault" "this" {
   name                       = "${var.kv_name}-${random_string.kv.result}"
   location                   = azurerm_resource_group.this.location
   resource_group_name        = azurerm_resource_group.this.name
-  tenant_id                  = data.azurerm_client_config.current.tenant_id
+  tenant_id                  = var.tenant_id
   soft_delete_retention_days = 10
-  purge_protection_enabled   = false
+  purge_protection_enabled   = true
+  rbac_authorization_enabled = true
   sku_name                   = "standard"
 }
 
-resource "azurerm_key_vault_access_policy" "user_assigned_identity" {
-  key_vault_id            = azurerm_key_vault.this.id
-  tenant_id               = data.azurerm_client_config.current.tenant_id
-  object_id               = azurerm_user_assigned_identity.this.principal_id
-  certificate_permissions = ["Get", "List"]
-  key_permissions         = ["Get", "List"]
-  secret_permissions      = ["Get", "List", "Set", "Delete"]
-  storage_permissions     = ["Get", "List"]
+resource "azurerm_role_assignment" "key_vault_workload_identity" {
+  scope                = azurerm_key_vault.this.id
+  role_definition_name = "Key Vault Secrets User"
+  principal_id         = azurerm_user_assigned_identity.this.principal_id
+  principal_type       = "ServicePrincipal"
 }
 
-resource "azurerm_key_vault_access_policy" "this" {
-  key_vault_id       = azurerm_key_vault.this.id
-  tenant_id          = data.azurerm_client_config.current.tenant_id
-  object_id          = data.azurerm_client_config.current.object_id
-  secret_permissions = ["Get", "List", "Set", "Delete", "Purge"]
+resource "azurerm_role_assignment" "key_vault_deployer" {
+  scope                = azurerm_key_vault.this.id
+  role_definition_name = "Key Vault Secrets Officer"
+  principal_id         = data.azurerm_client_config.current.object_id
 }
 
 resource "azurerm_key_vault_secret" "cosmosdb_endpt" {
@@ -34,6 +31,6 @@ resource "azurerm_key_vault_secret" "cosmosdb_endpt" {
   value        = azurerm_cosmosdb_account.this.endpoint
   key_vault_id = azurerm_key_vault.this.id
   depends_on = [
-    azurerm_key_vault_access_policy.this
+    azurerm_role_assignment.key_vault_deployer
   ]
 }

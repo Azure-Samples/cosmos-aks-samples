@@ -4,7 +4,13 @@ targetScope = 'subscription'
 param rgName string
 param acrName string
 param cosmosName string
-param location string =deployment().location
+@description('Client ID of the Microsoft Entra web application registration used for interactive sign-in.')
+param entraWebAppClientId string
+param location string = deployment().location
+param kubernetesNamespace string = 'todo-app'
+param serviceAccountName string = 'todo-workload-identity'
+param databaseName string = 'todoapp'
+param containerName string = 'tasks'
 
 var baseName = rgName
 
@@ -26,7 +32,7 @@ module aksIdentity 'modules/Identity/userassigned.bicep' = {
 }
 
 
-resource vnetAKSRes 'Microsoft.Network/virtualNetworks@2021-02-01' existing = {
+resource vnetAKSRes 'Microsoft.Network/virtualNetworks@2022-01-01' existing = {
   scope: resourceGroup(rg.name)
   name: vnetAKS.outputs.vnetName
 }
@@ -39,9 +45,6 @@ module vnetAKS 'modules/vnet/vnet.bicep' = {
     vnetNamePrefix: 'aks'
     location: location
   }
-  dependsOn: [
-    rg
-  ]
 }
 
 module acrDeploy 'modules/acr/acr.bicep' = {
@@ -49,7 +52,7 @@ module acrDeploy 'modules/acr/acr.bicep' = {
   name: 'acrInstance'
   params: {
     acrName: acrName
-    principalId: aksIdentity.outputs.principalId
+    principalId: aksCluster.outputs.kubeletPrincipalId
     location: location
   }
 }
@@ -64,7 +67,7 @@ module akslaworkspace 'modules/laworkspace/la.bicep' = {
 }
 
 
-resource subnetaks 'Microsoft.Network/virtualNetworks/subnets@2020-11-01' existing = {
+resource subnetaks 'Microsoft.Network/virtualNetworks/subnets@2022-01-01' existing = {
   name: 'aksSubNet'
   parent: vnetAKSRes
 }
@@ -104,7 +107,7 @@ module federatedIdentity 'modules/Identity/federated.bicep' = {
   params: {
     basename: baseName
     issuerUrl: aksCluster.outputs.oidcIssuerUrl
-    subject: 'system:serviceaccount:my-app:workload-identity-sa'
+    subject: 'system:serviceaccount:${kubernetesNamespace}:${serviceAccountName}'
   }
 }
 
@@ -116,6 +119,8 @@ module cosmosdb 'modules/cosmos/cosmos.bicep'={
     principalId:aksIdentity.outputs.principalId
     accountName:cosmosName
     subNetId: subnetaks.id
+    databaseName: databaseName
+    containerName: containerName
   }
 
 }
@@ -132,3 +137,13 @@ module keyvault 'modules/keyvault/keyvault.bicep'={
     workspaceId: akslaworkspace.outputs.laworkspaceId
   }
 }
+
+output tenantId string = subscription().tenantId
+output webAppClientId string = entraWebAppClientId
+output workloadIdentityClientId string = aksIdentity.outputs.clientId
+output workloadIdentityPrincipalId string = aksIdentity.outputs.principalId
+output namespaceName string = kubernetesNamespace
+output workloadIdentityServiceAccountName string = serviceAccountName
+output cosmosEndpoint string = cosmosdb.outputs.cosmosEndpoint
+output cosmosDatabaseName string = databaseName
+output cosmosContainerName string = containerName

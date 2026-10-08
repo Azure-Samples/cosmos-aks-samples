@@ -9,6 +9,28 @@ variable "location" {
   default     = "eastus"
 }
 
+variable "tenant_id" {
+  type        = string
+  description = "Microsoft Entra tenant ID used by the application and Key Vault"
+}
+
+variable "entra_web_app_client_id" {
+  type        = string
+  description = "Client ID of the Microsoft Entra web application registration"
+}
+
+variable "kubernetes_namespace" {
+  type        = string
+  description = "Dedicated Kubernetes namespace for the application"
+  default     = "todo-app"
+}
+
+variable "service_account_name" {
+  type        = string
+  description = "Kubernetes service account federated with the workload identity"
+  default     = "todo-workload-identity"
+}
+
 variable "acr_name" {
   type        = string
   description = "ACR Name"
@@ -21,12 +43,12 @@ variable "acr_sku" {
 }
 
 variable "kv_name" {
-  type = string 
+  type        = string
   description = "Key Vault Name"
 }
 
 variable "cosmosdb_account_name" {
-  type = string
+  type        = string
   description = "Cosmos DB account name"
 }
 
@@ -41,9 +63,9 @@ variable "cosmosdb_container_name" {
 }
 
 variable "throughput" {
-  type = number
+  type        = number
   description = "Cosmos DB RU throughput"
-  default = 400
+  default     = 400
 }
 
 variable "uai_name" {
@@ -65,9 +87,9 @@ variable "address_space" {
 }
 
 variable "subnet_name" {
-  type = string 
+  type        = string
   description = "Subnet Name"
-  default = "aks-subnet"
+  default     = "aks-subnet"
 }
 
 variable "subnet_prefixes" {
@@ -77,18 +99,17 @@ variable "subnet_prefixes" {
 }
 
 variable "aks_name" {
-  type = string 
+  type        = string
   description = "AKS cluster name"
 }
 
 variable "vm_size" {
-  type = string 
+  type        = string
   description = "AKS Node Size"
-  default = "Standard_D4s_v3"
+  default     = "Standard_D4s_v3"
 }
 
 variable "node_count" {
-  type = number
-  default = 2 
+  type    = number
+  default = 2
 }
-
