@@ -1,66 +1,133 @@
 ﻿namespace todo
 {
+    using System;
     using System.Collections.Generic;
-    using System.Linq;
+    using System.Net;
     using System.Threading.Tasks;
-    using todo.Models;
     using Microsoft.Azure.Cosmos;
-    using Microsoft.Azure.Cosmos.Fluent;
-    using Microsoft.Extensions.Configuration;
+    using todo.Models;
 
     public class CosmosDbService : ICosmosDbService
     {
-        private Container _container;
+        private readonly Container _container;
 
         public CosmosDbService(
             CosmosClient dbClient,
             string databaseName,
             string containerName)
         {
-            this._container = dbClient.GetContainer(databaseName, containerName);
-        }
-        
-        public async Task AddItemAsync(Item item)
-        {
-            await this._container.CreateItemAsync<Item>(item, new PartitionKey(item.Id));
+            _container = dbClient.GetContainer(databaseName, containerName);
         }
 
-        public async Task DeleteItemAsync(string id)
+        public async Task<IReadOnlyList<Item>> GetItemsAsync(string ownerId)
         {
-            await this._container.DeleteItemAsync<Item>(id, new PartitionKey(id));
-        }
+            var queryDefinition = new QueryDefinition(
+                    "SELECT * FROM c WHERE c.ownerId = @ownerId")
+                .WithParameter("@ownerId", ownerId);
+            var query = _container.GetItemQueryIterator<Item>(queryDefinition);
+            var results = new List<Item>();
 
-        public async Task<Item> GetItemAsync(string id)
-        {
-            try
-            {
-                ItemResponse<Item> response = await this._container.ReadItemAsync<Item>(id, new PartitionKey(id));
-                return response.Resource;
-            }
-            catch(CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
-            { 
-                return null;
-            }
-
-        }
-
-        public async Task<IEnumerable<Item>> GetItemsAsync(string queryString)
-        {
-            var query = this._container.GetItemQueryIterator<Item>(new QueryDefinition(queryString));
-            List<Item> results = new List<Item>();
             while (query.HasMoreResults)
             {
                 var response = await query.ReadNextAsync();
-                
-                results.AddRange(response.ToList());
+                results.AddRange(response);
             }
 
             return results;
         }
 
-        public async Task UpdateItemAsync(string id, Item item)
+        public async Task<Item?> GetItemAsync(string id, string ownerId)
         {
-            await this._container.UpsertItemAsync<Item>(item, new PartitionKey(id));
+            var item = await ReadItemAsync(id);
+            return item is not null && string.Equals(item.OwnerId, ownerId, StringComparison.Ordinal)
+                ? item
+                : null;
+        }
+
+        public async Task<Item> CreateItemAsync(
+            string ownerId,
+            string name,
+            string? description,
+            bool completed)
+        {
+            var item = new Item
+            {
+                Id = Guid.NewGuid().ToString("D"),
+                OwnerId = ownerId,
+                Name = name,
+                Description = description,
+                Completed = completed
+            };
+
+            var response = await _container.CreateItemAsync(item, new PartitionKey(item.Id));
+            return response.Resource;
+        }
+
+        public async Task<bool> UpdateItemAsync(
+            string id,
+            string ownerId,
+            string name,
+            string? description,
+            bool completed)
+        {
+            var item = await GetItemAsync(id, ownerId);
+            if (item is null)
+            {
+                return false;
+            }
+
+            item.Name = name;
+            item.Description = description;
+            item.Completed = completed;
+
+            try
+            {
+                await _container.ReplaceItemAsync(
+                    item,
+                    id,
+                    new PartitionKey(id),
+                    new ItemRequestOptions { IfMatchEtag = item.ETag });
+                return true;
+            }
+            catch (CosmosException exception) when (exception.StatusCode == HttpStatusCode.NotFound)
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> DeleteItemAsync(string id, string ownerId)
+        {
+            var item = await GetItemAsync(id, ownerId);
+            if (item is null)
+            {
+                return false;
+            }
+
+            try
+            {
+                await _container.DeleteItemAsync<Item>(
+                    id,
+                    new PartitionKey(id),
+                    new ItemRequestOptions { IfMatchEtag = item.ETag });
+                return true;
+            }
+            catch (CosmosException exception) when (exception.StatusCode == HttpStatusCode.NotFound)
+            {
+                return false;
+            }
+        }
+
+        private async Task<Item?> ReadItemAsync(string id)
+        {
+            try
+            {
+                var response = await _container.ReadItemAsync<Item>(id, new PartitionKey(id));
+                return response.Resource;
+            }
+            catch (CosmosException exception) when (exception.StatusCode == HttpStatusCode.NotFound)
+            {
+                return null;
+            }
         }
     }
 }

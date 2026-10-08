@@ -85,6 +85,7 @@ resource aksCluster 'Microsoft.ContainerService/managedClusters@2024-02-01' = {
 }
 
 output oidcIssuerUrl string = aksCluster.properties.oidcIssuerProfile.issuerURL
+output kubeletPrincipalId string = aksCluster.properties.identityProfile.kubeletidentity.objectId
 
 
 var aksDiagCategories = [

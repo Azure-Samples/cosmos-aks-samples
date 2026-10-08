@@ -7,6 +7,12 @@
     }, 
     "acrName" :{
       "value": "{ACR Instance Name}"
+    },
+    "cosmosName": {
+      "value": "{Cosmos DB Account Name}"
+    },
+    "entraWebAppClientId": {
+      "value": "{Microsoft Entra Web App Client ID}"
     }
   }
 }

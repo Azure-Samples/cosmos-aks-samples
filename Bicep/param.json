@@ -10,6 +10,9 @@
     },
     "acrName" :{
       "value": "{ACR Instance Name}"
+    },
+    "entraWebAppClientId": {
+      "value": "{Microsoft Entra Web App Client ID}"
     }
   }
 }

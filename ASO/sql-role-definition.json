@@ -9,7 +9,9 @@
        "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers/readChangeFeed",
        "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers/items/read",
        "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers/items/upsert",
-       "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers/items/create"
+       "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers/items/create",
+       "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers/items/replace",
+       "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers/items/delete"
         ]
     }]
 }

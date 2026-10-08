@@ -1,17 +1,9 @@
 param basename string
-//param logworkspaceid string   // Uncomment this to configure log analytics workspace
 param subnetId string
 param identity object
-param identityid string
-param clientId string
-param principalId string
 param location string = resourceGroup().location
-param podBindingSelector string
-param podIdentityName string
-param podIdentityNamespace string
 
-
-resource aksCluster 'Microsoft.ContainerService/managedClusters@2022-06-02-preview' = {
+resource aksCluster 'Microsoft.ContainerService/managedClusters@2024-02-01' = {
   name: '${basename}aks'
   location: location
   identity: {
@@ -19,7 +11,6 @@ resource aksCluster 'Microsoft.ContainerService/managedClusters@2022-06-02-previ
     userAssignedIdentities: identity   
   }
   properties: {
-    kubernetesVersion: '1.22.11'
     nodeResourceGroup: '${basename}-aksInfraRG'
     dnsPrefix: '${basename}aks'
     agentPoolProfiles: [
@@ -44,10 +35,8 @@ resource aksCluster 'Microsoft.ContainerService/managedClusters@2022-06-02-previ
       loadBalancerSku: 'standard'
       networkPlugin: 'azure'
       outboundType: 'loadBalancer'
-      dockerBridgeCidr: '172.17.0.1/16'
       dnsServiceIP: '10.0.0.10'
       serviceCidr: '10.0.0.0/16'
- 
     }
     apiServerAccessProfile: {
       enablePrivateCluster: false
@@ -55,56 +44,32 @@ resource aksCluster 'Microsoft.ContainerService/managedClusters@2022-06-02-previ
     enableRBAC: true
     enablePodSecurityPolicy: false
 
-    addonProfiles:{
-      /*
-       // Uncomment this to configure log analytics workspace
-      omsagent: {
-        config: {
-          logAnalyticsWorkspaceResourceID: logworkspaceid
-        }
-        enabled: true
-      }*/
+    addonProfiles: {
       azureKeyvaultSecretsProvider: {
         enabled: true
+        config: {
+          enableSecretRotation: 'true'
+        }
       }
       azurepolicy: {
         enabled: false
       }
     }
     
-    podIdentityProfile: {
+    oidcIssuerProfile: {
       enabled: true
-      userAssignedIdentities: [
-        {
-          bindingSelector: podBindingSelector
-          identity: {
-            clientId: clientId
-            resourceId: identityid
-            objectId: principalId
-          }
-          name: podIdentityName
-          namespace: podIdentityNamespace
-        }
-      ]
-      userAssignedIdentityExceptions: [
-        {
-          name: 'string'
-          namespace: 'string'
-          podLabels: {}
-        }
-      ]
     }
     disableLocalAccounts: false
+    autoUpgradeProfile: {
+      upgradeChannel: 'stable'
+    }
+    securityProfile: {
+      workloadIdentity: {
+        enabled: true
+      }
+    }
   }
 }
 
-
-
-
-
-
-
-
-
-
-
+output oidcIssuerUrl string = aksCluster.properties.oidcIssuerProfile.issuerURL
+output kubeletPrincipalId string = aksCluster.properties.identityProfile.kubeletidentity.objectId

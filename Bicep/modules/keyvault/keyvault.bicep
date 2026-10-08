@@ -67,6 +67,6 @@ resource kvSecretCosmosEndpoint 'Microsoft.KeyVault/vaults/secrets@2021-11-01-pr
      // nbf: int
     }
     contentType: 'string'
-    value: 'https://${cosmosEndpoint}.documents.azure.com:443/' 
+    value: cosmosEndpoint
   }
 }

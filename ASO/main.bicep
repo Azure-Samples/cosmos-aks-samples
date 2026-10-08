@@ -3,7 +3,14 @@ targetScope = 'subscription'
 // Parameters
 param rgName string
 param acrName string
-param location string =deployment().location
+param cosmosName string
+@description('Client ID of the Microsoft Entra web application registration used for interactive sign-in.')
+param entraWebAppClientId string
+param location string = deployment().location
+param kubernetesNamespace string = 'todo-app'
+param serviceAccountName string = 'todo-workload-identity'
+param databaseName string = 'todoapp'
+param containerName string = 'tasks'
 
 var baseName = rgName
 
@@ -38,9 +45,6 @@ module vnetAKS 'modules/vnet/vnet.bicep' = {
     vnetNamePrefix: 'aks'
     location: location
   }
-  dependsOn: [
-    rg
-  ]
 }
 
 module acrDeploy 'modules/acr/acr.bicep' = {
@@ -48,7 +52,7 @@ module acrDeploy 'modules/acr/acr.bicep' = {
   name: 'acrInstance'
   params: {
     acrName: acrName
-    principalId: aksIdentity.outputs.principalId
+    principalId: aksCluster.outputs.kubeletPrincipalId
     location: location
   }
 }
@@ -95,18 +99,30 @@ module aksCluster 'modules/aks/aks.bicep' = {
     location: location
     basename: baseName
    // logworkspaceid: akslaworkspace.outputs.laworkspaceId  // Uncomment this to configure log analytics workspace
-    podBindingSelector: 'my-pod-identity'
-    podIdentityName: 'my-pod-identity'
-    podIdentityNamespace: 'my-app'
     subnetId: subnetaks.id
-    clientId: aksIdentity.outputs.clientId
-    identityid: aksIdentity.outputs.identityid
     identity: {
       '${aksIdentity.outputs.identityid}' : {}
     }
-    principalId: aksIdentity.outputs.principalId
   }
 }
 
+module federatedIdentity 'modules/Identity/federated.bicep' = {
+  scope: resourceGroup(rg.name)
+  name: 'federatedIdentity'
+  params: {
+    basename: baseName
+    issuerUrl: aksCluster.outputs.oidcIssuerUrl
+    subject: 'system:serviceaccount:${kubernetesNamespace}:${serviceAccountName}'
+  }
+}
 
-
+output tenantId string = subscription().tenantId
+output webAppClientId string = entraWebAppClientId
+output workloadIdentityClientId string = aksIdentity.outputs.clientId
+output workloadIdentityPrincipalId string = aksIdentity.outputs.principalId
+output namespaceName string = kubernetesNamespace
+output workloadIdentityServiceAccountName string = serviceAccountName
+output cosmosEndpoint string = 'https://${cosmosName}.documents.azure.com:443/'
+output cosmosDatabaseName string = databaseName
+output cosmosContainerName string = containerName
+output aksSubnetId string = subnetaks.id

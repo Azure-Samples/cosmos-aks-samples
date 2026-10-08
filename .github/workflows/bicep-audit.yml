@@ -1,4 +1,7 @@
 name: Validate bicep templates
+permissions:
+  contents: read
+
 on:
   push:
     branches: 
@@ -16,6 +19,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
+      contents: read
       security-events: write
     steps:
       - name: Checkout
